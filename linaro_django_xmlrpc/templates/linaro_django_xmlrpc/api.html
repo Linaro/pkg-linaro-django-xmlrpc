@@ -1,0 +1,10 @@
+<dl>
+{% for method in methods %}
+<dt>Name:</dt>
+<dd>{{method.name}}</dd>
+<dt>Signature:</dt>
+<dd>{{method.signature}}</dd>
+<dt>Help:</dt>
+<dd>{{method.help}}</dd>
+{% endfor %}
+</dl>
