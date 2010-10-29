@@ -77,4 +77,5 @@ INSTALLED_APPS = (
     #'django.contrib.sessions',
     'django.contrib.sites',
     'linaro_django_xmlrpc',
+    'example',
 )
