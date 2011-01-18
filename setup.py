@@ -28,6 +28,7 @@ setup(
         author = "Zygmunt Krynicki",
         author_email = "zygmunt.krynicki@linaro.org",
         packages = find_packages(),
+        test_suite = 'test_project.tests.run_tests',
         long_description = """
         Flexible XML-RPC application for Django
         """,
@@ -38,5 +39,11 @@ setup(
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 2.6",
             "Framework :: Django",
-            ],
-        )
+        ],
+        tests_require=[
+            'django-testscenarios >= 0.5',
+        ],
+        install_requires=[
+            'Django >= 1.0',
+        ],
+    )
