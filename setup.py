@@ -23,11 +23,11 @@ from setuptools import setup, find_packages
 from linaro_django_xmlrpc import get_version
 
 setup(
-        name = 'linaro_django_xmlrpc',
+        name = 'linaro-django-xmlrpc',
         version = get_version(),
         author = "Zygmunt Krynicki",
         author_email = "zygmunt.krynicki@linaro.org",
-        packages = ['linaro_django_xmlrpc'],
+        packages = find_packages(),
         long_description = """
         Flexible XML-RPC application for Django
         """,
