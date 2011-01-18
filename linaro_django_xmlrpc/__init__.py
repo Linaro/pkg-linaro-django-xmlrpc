@@ -25,11 +25,12 @@ import logging
 import xmlrpclib
 
 
-__version__ = (0, 1, "dev", 0)
-
-
-def get_version():
-    return ".".join(map(str, __version__))
+__version__ = "0.1.0.dev"
+try:
+    import versiontools
+    __version__ = versiontools.Version(*__version__.split("."))
+except ImportError:
+    pass
 
 
 def xml_rpc_signature(*sig):

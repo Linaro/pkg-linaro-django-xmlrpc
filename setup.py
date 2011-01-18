@@ -20,11 +20,11 @@
 
 from setuptools import setup, find_packages
 
-from linaro_django_xmlrpc import get_version
+from linaro_django_xmlrpc import __version__
 
 setup(
         name = 'linaro-django-xmlrpc',
-        version = get_version(),
+        version = str(__version__),
         author = "Zygmunt Krynicki",
         author_email = "zygmunt.krynicki@linaro.org",
         packages = find_packages(),
@@ -44,7 +44,11 @@ setup(
         tests_require=[
             'django-testscenarios >= 0.5',
         ],
+        setup_requires = [
+            'versiontools >= 1.0.2',
+        ],
         install_requires=[
             'Django >= 1.0',
+            'versiontools >= 1.0.2',
         ],
     )
