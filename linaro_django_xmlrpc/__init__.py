@@ -162,6 +162,7 @@ class Mapper(object):
             else:
                 obj = obj_or_cls
         except:
+            # TODO: Perhaps this should be an APPLICATION_ERROR?
             logging.exception("unable to instantiate stuff")
         meth = getattr(obj, meth_name, None)
         if not inspect.ismethod(meth):
