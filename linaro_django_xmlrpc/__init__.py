@@ -25,7 +25,7 @@ import logging
 import xmlrpclib
 
 
-__version__ = "0.1.0.dev"
+__version__ = "0.2.0.dev"
 try:
     import versiontools
     __version__ = versiontools.Version(*__version__.split("."))
