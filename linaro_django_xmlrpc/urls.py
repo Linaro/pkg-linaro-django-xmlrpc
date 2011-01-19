@@ -1,10 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 
 from linaro_django_xmlrpc.views import handler
-from linaro_django_xmlrpc import Mapper
-
-mapper = Mapper()
-mapper.register_introspection_methods()
+from linaro_django_xmlrpc.globals import mapper
 
 urlpatterns = patterns(
     '',

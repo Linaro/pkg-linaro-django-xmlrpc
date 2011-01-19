@@ -42,7 +42,7 @@ setup(
             "Framework :: Django",
         ],
         tests_require=[
-            'django-testscenarios >= 0.5',
+            'django-testscenarios >= 0.5.2',
         ],
         setup_requires = [
             'versiontools >= 1.0.2',

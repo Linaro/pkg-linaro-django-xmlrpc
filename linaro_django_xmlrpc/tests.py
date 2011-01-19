@@ -25,7 +25,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.test import TestCase
 
-from linaro_django_xmlrpc import (
+from linaro_django_xmlrpc.models import (
     Dispatcher,
     ExposedAPI,
     FaultCodes,
@@ -357,8 +357,35 @@ class HandlerTests(TestCase):
 
     urls = 'linaro_django_xmlrpc.urls'
 
+    def setUp(self):
+        self.url = reverse("linaro_django_xmlrpc.views.handler")
+        from linaro_django_xmlrpc.urls import mapper
+        self.mapper = mapper
+
+    def test_handler_get_returns_200(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
     def test_request_context_was_used(self):
-        url = reverse("linaro_django_xmlrpc.views.handler")
-        response = self.client.get(url)
+        response = self.client.get(self.url)
         self.assertTrue(
             isinstance(response.context, RequestContext))
+
+    def test_get_request_shows_help(self):
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
+
+    def test_empty_post_request_shows_help(self):
+        response = self.client.post(self.url)
+        self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
+
+    #def test_help_page_lists_all_methods(self):
+    #    expected_methods = []
+    #    for name in dispatcher.system_listMethods():
+    #        expected_methods.append({
+    #            'name': name,
+    #            'signature': dispatcher.system_methodSignature(name),
+    #            'help': dispatcher.system_methodHelp(name)
+    #            })
+    #    response = self.client.get("/xml-rpc/")
+    #    self.assertEqual(response.context['methods'], expected_methods)
