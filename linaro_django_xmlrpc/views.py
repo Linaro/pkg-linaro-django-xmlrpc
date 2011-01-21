@@ -63,3 +63,11 @@ def handler(request, mapper):
                 domain = Site.objects.get_current().domain)
         }, RequestContext(request))
 
+
+@csrf_exempt
+def default_handler(request):
+    """
+    Same as handler but uses default mapper
+    """
+    from linaro_django_xmlrpc.globals import mapper
+    return handler(request, mapper)

@@ -23,7 +23,7 @@ import xmlrpclib
 
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
-from django.test import TestCase
+from django_testscenarios import TestCase
 
 from linaro_django_xmlrpc.models import (
     Dispatcher,
@@ -92,6 +92,7 @@ class ExposedAPITests(TestCase):
 class MapperTests(TestCase):
 
     def setUp(self):
+        super(MapperTests, self).setUp()
         self.mapper = Mapper()
 
     def test_register_guesses_class_name(self):
@@ -299,6 +300,7 @@ class DispatcherTests(TestCase):
 class SystemAPITest(TestCase):
 
     def setUp(self):
+        super(SystemAPITest, self).setUp()
         self.mapper = Mapper()
         self.system_api = SystemAPI(self.mapper)
 
@@ -358,8 +360,9 @@ class HandlerTests(TestCase):
     urls = 'linaro_django_xmlrpc.urls'
 
     def setUp(self):
-        self.url = reverse("linaro_django_xmlrpc.views.handler")
-        from linaro_django_xmlrpc.urls import mapper
+        super(HandlerTests, self).setUp()
+        self.url = reverse("linaro_django_xmlrpc.views.default_handler")
+        from linaro_django_xmlrpc.globals import mapper
         self.mapper = mapper
 
     def test_handler_get_returns_200(self):
@@ -379,13 +382,10 @@ class HandlerTests(TestCase):
         response = self.client.post(self.url)
         self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
 
-    #def test_help_page_lists_all_methods(self):
-    #    expected_methods = []
-    #    for name in dispatcher.system_listMethods():
-    #        expected_methods.append({
-    #            'name': name,
-    #            'signature': dispatcher.system_methodSignature(name),
-    #            'help': dispatcher.system_methodHelp(name)
-    #            })
-    #    response = self.client.get("/xml-rpc/")
-    #    self.assertEqual(response.context['methods'], expected_methods)
+    def test_help_page_lists_all_methods(self):
+        response = self.client.get("/xml-rpc/")
+        for method_name in self.mapper.list_methods():
+            self.assertIn(
+                method_name,
+                [method["name"] for method in response.context['methods']]
+            )
