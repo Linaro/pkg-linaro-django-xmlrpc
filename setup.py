@@ -30,9 +30,7 @@ setup(
         packages = find_packages(),
         url = 'https://launchpad.net/linaro-django-xmlrpc',
         test_suite = 'test_project.tests.run_tests',
-        long_description = """
-        Flexible XML-RPC application for Django
-        """,
+        description = "Flexible XML-RPC application for Django",
         classifiers=[
             "Development Status :: 3 - Alpha",
             "Intended Audience :: Developers",
