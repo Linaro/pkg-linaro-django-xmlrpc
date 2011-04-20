@@ -233,12 +233,12 @@ class Dispatcher(object):
         try:
             params, method_name = xmlrpclib.loads(data)
             return method_name, params
-        except xmlrpclib.ResponseError as ex:
-            raise xmlrpc.Fault(
+        except xmlrpclib.ResponseError:
+            raise xmlrpclib.Fault(
                 FaultCodes.ServerError.INVALID_XML_RPC,
                 "Unable to decode request")
         except:
-            raise xmlrpc.Fault(
+            raise xmlrpclib.Fault(
                 FaultCodes.ServerError.INTERNAL_XML_RPC_ERROR,
                 "Unable to decode request")
 
@@ -274,7 +274,7 @@ class Dispatcher(object):
                         "No such method: %r" % method)
                 # TODO: check parameter types before calling
             return impl(*params)
-        except xmlrpclib.Fault, fault:
+        except xmlrpclib.Fault:
             # Forward XML-RPC Faults to the client
             raise
         except:

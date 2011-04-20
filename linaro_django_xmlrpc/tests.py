@@ -33,7 +33,6 @@ from linaro_django_xmlrpc.models import (
     SystemAPI,
     xml_rpc_signature,
 )
-from linaro_django_xmlrpc.views import handler
 
 
 class MockUser(object):
