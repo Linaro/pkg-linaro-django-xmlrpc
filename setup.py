@@ -39,6 +39,10 @@ setup(
             "Programming Language :: Python :: 2.6",
             "Framework :: Django",
         ],
+        data_files=[
+            ('linaro_django_xmlrpc/templates/linaro_django_xmlrpc',
+             ['linaro_django_xmlrpc/templates/linaro_django_xmlrpc/api.html'])
+        ],
         tests_require=[
             'django-testscenarios >= 0.5.2',
         ],
