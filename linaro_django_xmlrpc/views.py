@@ -20,6 +20,7 @@
 XML-RPC views
 """
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.csrf.middleware import csrf_exempt
 from django.contrib.sites.models import Site
 from django.http import HttpResponse
@@ -70,3 +71,21 @@ def default_handler(request):
     """
     from linaro_django_xmlrpc.globals import mapper
     return handler(request, mapper)
+
+
+@login_required
+def tokens(request):
+    """
+    List of tokens for an authenticated user
+    """
+    tokens = AuthToken.objects.filter(user=request.user).order_by("last_used_on")
+    return render_to_response("linaro_django_xmlrpc/tokens.html", {
+        "token_list": tokens,
+    }, RequestContext(request))
+
+
+@login_required
+def create_token(request):
+    """
+    Create a token for the requesting user
+    """

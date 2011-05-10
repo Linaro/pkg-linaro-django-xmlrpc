@@ -26,9 +26,8 @@ import logging
 import random
 import xmlrpclib
 
-from django.db import models
 from django.contrib.auth.models import User
-from linaro_django_xmlrpc.managers import AuthTokenManager
+from django.db import models
 
 
 class AuthToken(models.Model):

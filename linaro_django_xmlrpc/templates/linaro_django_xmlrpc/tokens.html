@@ -1,0 +1,10 @@
+<table>
+  {% for token in tokens %}
+  <tr>
+    <td>{{ token.token }}</td>
+    <td>{{ token.creted_on }}</td>
+    <td>{{ token.last_used_on }}</td>
+    <td>{{ token.description }}</td>
+  </tr>
+  {% endfor %}
+</table>
