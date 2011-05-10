@@ -27,4 +27,3 @@ try:
     __version__ = versiontools.Version(*__version__.split("."))
 except ImportError:
     pass
-

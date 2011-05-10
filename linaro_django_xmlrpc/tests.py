@@ -109,6 +109,7 @@ class MapperTests(TestCase):
     def test_register_overwrites_previous_binding(self):
         class TestAPI1(ExposedAPI):
             pass
+
         class TestAPI2(ExposedAPI):
             pass
         self.mapper.register(TestAPI1, 'API')
@@ -148,8 +149,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI, '')
@@ -160,8 +163,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI)
@@ -172,8 +177,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI())
@@ -184,6 +191,7 @@ class MapperTests(TestCase):
         class SourceA(ExposedAPI):
             def a(self):
                 pass
+
         class SourceB(ExposedAPI):
             def a(self):
                 pass
@@ -386,5 +394,4 @@ class HandlerTests(TestCase):
         for method_name in self.mapper.list_methods():
             self.assertIn(
                 method_name,
-                [method["name"] for method in response.context['methods']]
-            )
+                [method["name"] for method in response.context['methods']])

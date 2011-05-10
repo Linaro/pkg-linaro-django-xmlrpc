@@ -59,8 +59,8 @@ def handler(request, mapper):
         return render_to_response('linaro_django_xmlrpc/api.html', {
             'methods': methods,
             'site_url': "http://{domain}".format(
-                domain = Site.objects.get_current().domain)
-        }, RequestContext(request))
+                domain=Site.objects.get_current().domain)},
+            RequestContext(request))
 
 
 @csrf_exempt

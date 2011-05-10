@@ -56,11 +56,13 @@ class FaultCodes(object):
         NOT_WELL_FORMED = -32700
         UNSUPPORTED_ENCODING = -32701
         INVALID_CHARACTER_FOR_ENCODING = -32702
+
     class ServerError:
         INVALID_XML_RPC = -32600
         REQUESTED_METHOD_NOT_FOUND = -32601
         INVALID_METHOD_PARAMETERS = -32602
         INTERNAL_XML_RPC_ERROR = -32603
+
     APPLICATION_ERROR = -32500
     SYSTEM_ERROR = -32400
     TRANSPORT_ERROR = -32300
@@ -227,8 +229,8 @@ class Dispatcher(object):
         @return A tuple with (method_name, params)
         """
         # TODO: Check that xmlrpclib.loads can only raise this exception (it
-        # probably can raise some others as well but this is not documented) and
-        # handle each by wrapping it into an appropriate Fault with correct
+        # probably can raise some others as well but this is not documented)
+        # and handle each by wrapping it into an appropriate Fault with correct
         # code/message.
         try:
             params, method_name = xmlrpclib.loads(data)
@@ -278,7 +280,7 @@ class Dispatcher(object):
             # Forward XML-RPC Faults to the client
             raise
         except:
-            # Treat all other exceptions as internal errors 
+            # Treat all other exceptions as internal errors
             self.handle_internal_error(method, params)
             raise xmlrpclib.Fault(
                 FaultCodes.ServerError.INTERNAL_XML_RPC_ERROR,

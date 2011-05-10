@@ -23,34 +23,34 @@ from setuptools import setup, find_packages
 from linaro_django_xmlrpc import __version__
 
 setup(
-        name = 'linaro-django-xmlrpc',
-        version = str(__version__),
-        author = "Zygmunt Krynicki",
-        author_email = "zygmunt.krynicki@linaro.org",
-        packages = find_packages(),
-        url = 'https://launchpad.net/linaro-django-xmlrpc',
-        test_suite = 'test_project.tests.run_tests',
-        description = "Flexible XML-RPC application for Django",
-        classifiers=[
-            "Development Status :: 3 - Alpha",
-            "Intended Audience :: Developers",
-            "License :: OSI Approved :: GNU Affero General Public License v3",
-            "Operating System :: OS Independent",
-            "Programming Language :: Python :: 2.6",
-            "Framework :: Django",
-        ],
-        data_files=[
-            ('linaro_django_xmlrpc/templates/linaro_django_xmlrpc',
-             ['linaro_django_xmlrpc/templates/linaro_django_xmlrpc/api.html'])
-        ],
-        tests_require=[
-            'django-testscenarios >= 0.5.2',
-        ],
-        setup_requires = [
-            'versiontools >= 1.0.2',
-        ],
-        install_requires=[
-            'Django >= 1.0',
-            'versiontools >= 1.0.2',
-        ],
-    )
+    name='linaro-django-xmlrpc',
+    version=str(__version__),
+    author="Zygmunt Krynicki",
+    author_email="zygmunt.krynicki@linaro.org",
+    packages=find_packages(),
+    url='https://launchpad.net/linaro-django-xmlrpc',
+    test_suite='test_project.tests.run_tests',
+    description="Flexible XML-RPC application for Django",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2.6",
+        "Framework :: Django",
+    ],
+    data_files=[
+        ('linaro_django_xmlrpc/templates/linaro_django_xmlrpc',
+         ['linaro_django_xmlrpc/templates/linaro_django_xmlrpc/api.html'])
+    ],
+    tests_require=[
+        'django-testscenarios >= 0.5.2',
+    ],
+    setup_requires=[
+        'versiontools >= 1.0.2',
+    ],
+    install_requires=[
+        'Django >= 1.0',
+        'versiontools >= 1.0.2',
+    ],
+)
