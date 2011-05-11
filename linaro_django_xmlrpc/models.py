@@ -20,9 +20,61 @@
 Empty module for Django to pick up this package as Django application
 """
 
+import datetime
 import inspect
 import logging
+import random
 import xmlrpclib
+
+from django.db import models
+from django.contrib.auth.models import User
+from linaro_django_xmlrpc.managers import AuthTokenManager
+
+
+class AuthToken(models.Model):
+    """
+    Authentication token.
+
+    Used by the AuthTokenBackend to associate a request with user.  Similar to
+    OAuth resource token but much more primitive, based on HTTP Basic Auth.
+    """
+
+    # Set of valid characters for secret
+    _SECRET_CHARS = "01234567890abcdefghijklmnopqrtsuwxyz"
+
+    secret = models.CharField(
+        max_length=128,
+        help_text="Secret randomly generated text that grants user access instead of their regular password",
+        unique=True,
+        default=lambda: ''.join((random.choice(AuthToken._SECRET_CHARS) for i in xrange(128))))
+
+    description = models.TextField(
+        default="",
+        help_text="Arbitrary text that helps the user to associate tokens with their intended purpose")
+
+    created_on = models.DateTimeField(
+        auto_now=True,
+        help_text="Time and date when the token was created")
+
+    last_used_on = models.DateTimeField(
+        null=True,
+        help_text="Time and date when the token was last used")
+
+    user = models.ForeignKey(User, related_name="auth_tokens")
+
+    @classmethod
+    def get_user_for_secret(cls, secret):
+        """
+        Lookup an user for this secret, returns None on failure.
+
+        This also bumps last_used_on if successful
+        """
+        try:
+            token = cls.objects.get(secret=secret)
+            token.last_used_on = datetime.datetime.utcnow()
+            return token.user
+        except cls.DoesNotExist:
+            return None
 
 
 def xml_rpc_signature(*sig):

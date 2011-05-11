@@ -19,13 +19,16 @@
 """
 Unit tests for Linaro Django XML-RPC Application
 """
+import re
 import xmlrpclib
 
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django_testscenarios import TestCase
 
 from linaro_django_xmlrpc.models import (
+    AuthToken,
     Dispatcher,
     ExposedAPI,
     FaultCodes,
@@ -388,3 +391,42 @@ class HandlerTests(TestCase):
                 method_name,
                 [method["name"] for method in response.context['methods']]
             )
+
+
+class AuthTokenTests(TestCase):
+
+    _USER = "user"
+    _INEXISTING_SECRET = "inexisting-secret"
+
+    def setUp(self):
+        super(AuthTokenTests, self).setUp()
+        self.user = User.objects.get_or_create(username=self._USER)[0]
+
+    def test_secret_is_generated(self):
+        token = AuthToken.objects.create(user=self.user)
+        self.assertTrue(re.match("[a-z0-9]{128}", token.secret))
+
+    def test_generated_secret_is_not_constant(self):
+        token1 = AuthToken.objects.create(user=self.user)
+        token2 = AuthToken.objects.create(user=self.user)
+        self.assertNotEqual(token1.secret, token2.secret)
+
+    def test_created_on(self):
+        token = AuthToken.objects.create(user=self.user)
+        self.assertTrue(token.created_on != None)
+        # XXX: How to sensibly test auto_now? aka how to mock time
+
+    def test_last_used_on_is_initially_empty(self):
+        token = AuthToken.objects.create(user=self.user)
+        self.assertTrue(token.last_used_on is None)
+    
+    def test_lookup_user_for_secret_returns_none_on_failure(self):
+        user = AuthToken.get_user_for_secret(self._INEXISTING_SECRET)
+        self.assertTrue(user is None)
+
+    def test_get_user_for_secret(self):
+        token = AuthToken.objects.create(user=self.user)
+        user = AuthToken.get_user_for_secret(token.secret)
+        self.assertEqual(user, self.user)
+
+
