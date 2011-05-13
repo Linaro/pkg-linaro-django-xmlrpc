@@ -179,7 +179,7 @@ class Mapper(object):
 
     def lookup(self, name, user=None):
         """
-        Lookup the callable associated with th specified name.
+        Lookup the callable associated with the specified name.
 
         The callable is a bound method of a registered object or a bound
         method of a freshly instantiated object of a registered class.
