@@ -15,6 +15,4 @@ locals().update(
             'linaro_django_xmlrpc',
             'example',
         ],
-        ROOT_URLCONF = 'test_project.urls'
-    )
-)
+        ROOT_URLCONF='test_project.urls'))
