@@ -28,6 +28,7 @@ import xmlrpclib
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class AuthToken(models.Model):
@@ -52,7 +53,7 @@ class AuthToken(models.Model):
         help_text="Arbitrary text that helps the user to associate tokens with their intended purpose")
 
     created_on = models.DateTimeField(
-        auto_now=True,
+        auto_now_add=True,
         help_text="Time and date when the token was created")
 
     last_used_on = models.DateTimeField(

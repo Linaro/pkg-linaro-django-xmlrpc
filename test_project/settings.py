@@ -14,9 +14,12 @@ locals().update(
             'django.contrib.auth',
             'django.contrib.contenttypes',
             'django.contrib.sites',
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'django.contrib.sessions',
             'linaro_django_xmlrpc',
             'example',
         ],
-        ROOT_URLCONF = 'test_project.urls'
+        ROOT_URLCONF = 'test_project.urls',
+        )
     )
-)

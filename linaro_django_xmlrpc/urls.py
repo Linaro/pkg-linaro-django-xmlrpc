@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import patterns, url
 
-from linaro_django_xmlrpc.views import default_handler
+from linaro_django_xmlrpc.views import default_handler, tokens
 
 
 urlpatterns = patterns(
