@@ -385,12 +385,11 @@ class HandlerTests(TestCase):
         self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
 
     def test_help_page_lists_all_methods(self):
-        response = self.client.get("/xml-rpc/")
+        response = self.client.get(self.url)
         for method_name in self.mapper.list_methods():
             self.assertIn(
                 method_name,
-                [method["name"] for method in response.context['methods']]
-            )
+                [method["name"] for method in response.context['methods']])
 
 
 class AuthTokenTests(TestCase):
