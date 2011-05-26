@@ -17,9 +17,13 @@ locals().update(
             'django.contrib.auth',
             'django.contrib.contenttypes',
             'django.contrib.sessions',
+            'django.contrib.messages',
             'linaro_django_xmlrpc',
             'example',
         ],
-        ROOT_URLCONF = 'test_project.urls',
-        )
+        MIDDLEWARE_CLASSES=[
+            'django.contrib.messages.middleware.MessageMiddleware',
+        ],
+        ROOT_URLCONF='linaro_django_xmlrpc.test_project.urls',
     )
+)

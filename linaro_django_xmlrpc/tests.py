@@ -40,7 +40,7 @@ from linaro_django_xmlrpc.models import (
 
 class MockUser(object):
     """
-    Mock django.contrib.auth.models.User class for out test cases
+    Mock django.contrib.auth.models.User class for our test cases
     """
 
     def __init__(self, is_authenticated, is_active):
@@ -73,22 +73,22 @@ class ExposedAPITests(TestCase):
 
     def test_user_defaults_to_None(self):
         api = ExposedAPI()
-        self.assertEqual(api._user, None)
+        self.assertEqual(api.user, None)
 
     def test_unauthenticated_users_are_ignored(self):
         user = MockUser(is_authenticated=False, is_active=True)
         api = ExposedAPI(user)
-        self.assertEqual(api._user, None)
+        self.assertEqual(api.user, None)
 
     def test_inactive_users_are_ignored(self):
         user = MockUser(is_authenticated=True, is_active=False)
         api = ExposedAPI(user)
-        self.assertEqual(api._user, None)
+        self.assertEqual(api.user, None)
 
     def test_authenticated_active_users_are_allowed(self):
         user = MockUser(is_authenticated=True, is_active=True)
         api = ExposedAPI(user)
-        self.assertEqual(api._user, user)
+        self.assertEqual(api.user, user)
 
 
 class MapperTests(TestCase):
@@ -371,11 +371,6 @@ class HandlerTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
-    def test_request_context_was_used(self):
-        response = self.client.get(self.url)
-        self.assertTrue(
-            isinstance(response.context, RequestContext))
-
     def test_get_request_shows_help(self):
         response = self.client.get(self.url)
         self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
@@ -395,6 +390,7 @@ class HandlerTests(TestCase):
 class AuthTokenTests(TestCase):
 
     _USER = "user"
+    _INEXISTING_USER = "inexisting-user"
     _INEXISTING_SECRET = "inexisting-secret"
 
     def setUp(self):
@@ -420,10 +416,22 @@ class AuthTokenTests(TestCase):
         self.assertTrue(token.last_used_on is None)
     
     def test_lookup_user_for_secret_returns_none_on_failure(self):
-        user = AuthToken.get_user_for_secret(self._INEXISTING_SECRET)
+        user = AuthToken.get_user_for_secret(self.user.username, self._INEXISTING_SECRET)
         self.assertTrue(user is None)
 
-    def test_get_user_for_secret(self):
+    def test_get_user_for_secret_finds_valid_user(self):
         token = AuthToken.objects.create(user=self.user)
-        user = AuthToken.get_user_for_secret(token.secret)
+        user = AuthToken.get_user_for_secret(self.user.username, token.secret)
         self.assertEqual(user, self.user)
+
+    def test_get_user_for_secret_checks_if_the_user_matches(self):
+        token = AuthToken.objects.create(user=self.user)
+        user = AuthToken.get_user_for_secret(self._INEXISTING_USER, token.secret)
+        self.assertEqual(user, None)
+
+    def test_get_user_for_secret_sets_last_used_on(self):
+        token = AuthToken.objects.create(user=self.user)
+        user = AuthToken.get_user_for_secret(self.user.username, token.secret)
+        # Refresh token
+        token = AuthToken.objects.get(user=self.user)
+        self.assertNotEqual(token.last_used_on, None)

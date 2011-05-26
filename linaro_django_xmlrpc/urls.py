@@ -1,12 +1,29 @@
-from django.conf.urls.defaults import patterns, url
+# Copyright (C) 2010, 2011 Linaro Limited
+#
+# Author: Zygmunt Krynicki <zygmunt.krynicki@linaro.org>
+#
+# This file is part of linaro-django-xmlrpc.
+#
+# linaro-django-xmlrpc is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License version 3
+# as published by the Free Software Foundation
+#
+# linaro-django-xmlrpc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with linaro-django-xmlrpc.  If not, see <http://www.gnu.org/licenses/>.
 
-from linaro_django_xmlrpc.views import default_handler, tokens
+
+from django.conf.urls.defaults import patterns, url, handler500, handler404
 
 
 urlpatterns = patterns(
-    '',
-    url(r'^tokens/', tokens,
-        name='linaro_django_xmlrpc.views.tokens'),
-    url(r'^xml-rpc/', default_handler,
-        name='linaro_django_xmlrpc.views.default_handler'),
+    'linaro_django_xmlrpc.views',
+    url(r'^RPC2/$', "default_handler"),
+    url(r'^tokens/$', "tokens"),
+    url(r'^tokens/create/$', "create_token"),
+    url(r'^tokens/(?P<object_id>\d+)/delete/$', "delete_token"),
 )

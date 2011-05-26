@@ -10,6 +10,12 @@ class ExampleAPI(ExposedAPI):
         """
         return "bar"
 
+    def whoami(self):
+        if self.user:
+            return self.user.username
+        else:
+            return None
+
 
 # Map our class in the default global mapper
 mapper.register(ExampleAPI)

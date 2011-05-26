@@ -1,30 +1,33 @@
-# Copyright (C) 2010 Linaro Limited
+# Copyright (C) 2010, 2011 Linaro Limited
 #
 # Author: Zygmunt Krynicki <zygmunt.krynicki@linaro.org>
 #
-# This file is part of Launch Control.
+# This file is part of linaro-django-xmlrpc.
 #
-# Launch Control is free software: you can redistribute it and/or modify
+# linaro-django-xmlrpc is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License version 3
 # as published by the Free Software Foundation
 #
-# Launch Control is distributed in the hope that it will be useful,
+# linaro-django-xmlrpc is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with Launch Control.  If not, see <http://www.gnu.org/licenses/>.
+# along with linaro-django-xmlrpc.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 XML-RPC views
 """
 
+import base64
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.csrf.middleware import csrf_exempt
 from django.contrib.sites.models import Site
-from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 
 from linaro_django_xmlrpc.models import (
@@ -32,6 +35,15 @@ from linaro_django_xmlrpc.models import (
     Dispatcher,
     SystemAPI,
 )
+from linaro_django_xmlrpc.forms import AuthTokenForm
+
+
+def _get_user_and_secret(auth_string):
+    scheme, value = auth_string.split(" ", 1)
+    if scheme != "Basic":
+        raise ValueError("Only basic authentication is supported")
+    decoded_value = base64.standard_b64decode(value)
+    return decoded_value.split(":", 1)
 
 
 @csrf_exempt
@@ -47,7 +59,16 @@ def handler(request, mapper):
         raw_data = request.raw_post_data
         response = HttpResponse(mimetype="application/xml")
         dispatcher = Dispatcher(mapper)
-        result = dispatcher.marshalled_dispatch(raw_data)
+        
+        try:
+            username, secret = _get_user_and_secret(request.META['HTTP_AUTHORIZATION'])
+            user = AuthToken.get_user_for_secret(username, secret)
+        except ValueError:
+            user = None
+        except Exception:
+            import logging
+            logging.exception("bug")
+        result = dispatcher.marshalled_dispatch(raw_data, user)
         response.write(result)
         response['Content-length'] = str(len(response.content))
         return response
@@ -90,3 +111,26 @@ def create_token(request):
     """
     Create a token for the requesting user
     """
+    if request.method == "POST":
+        form = AuthTokenForm(request.POST)
+        if form.is_valid():
+            form.save(commit=False)
+            form.instance.user = request.user
+            form.instance.save()
+            return HttpResponseRedirect(reverse("linaro_django_xmlrpc.views.tokens"))
+    else:
+        form = AuthTokenForm()
+    return render_to_response("linaro_django_xmlrpc/create_token.html", {
+        "form": form
+    }, RequestContext(request))
+
+
+@login_required
+def delete_token(request, object_id):
+    token = get_object_or_404(AuthToken, pk=object_id, user=request.user)
+    if request.method == 'POST':
+        token.delete()
+        return HttpResponseRedirect(reverse("linaro_django_xmlrpc.views.tokens"))
+    return render_to_response("linaro_django_xmlrpc/authtoken_confirm_delete.html", {
+        'token': token
+    }, RequestContext(request))

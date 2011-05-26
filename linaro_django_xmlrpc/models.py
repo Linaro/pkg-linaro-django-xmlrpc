@@ -49,6 +49,8 @@ class AuthToken(models.Model):
 
     description = models.TextField(
         default="",
+        null=False,
+        blank=True,
         help_text="Arbitrary text that helps the user to associate tokens with their intended purpose")
 
     created_on = models.DateTimeField(
@@ -61,8 +63,11 @@ class AuthToken(models.Model):
 
     user = models.ForeignKey(User, related_name="auth_tokens")
 
+    def __unicode__(self):
+        return u"security token {pk}".format(pk=self.pk);
+
     @classmethod
-    def get_user_for_secret(cls, secret):
+    def get_user_for_secret(cls, username, secret):
         """
         Lookup an user for this secret, returns None on failure.
 
@@ -70,10 +75,14 @@ class AuthToken(models.Model):
         """
         try:
             token = cls.objects.get(secret=secret)
-            token.last_used_on = datetime.datetime.utcnow()
-            return token.user
         except cls.DoesNotExist:
             return None
+        else:
+            if token.user.username != username:
+                return None  # bad username for this secret
+            token.last_used_on = datetime.datetime.utcnow()
+            token.save()
+            return token.user
 
 
 def xml_rpc_signature(*sig):
@@ -135,9 +144,9 @@ class ExposedAPI(object):
 
     def __init__(self, user=None):
         if user is not None and user.is_authenticated() and user.is_active:
-            self._user = user
+            self.user = user
         else:
-            self._user = None
+            self.user = None
 
 
 class Mapper(object):

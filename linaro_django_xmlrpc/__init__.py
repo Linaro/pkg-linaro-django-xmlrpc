@@ -2,29 +2,22 @@
 #
 # Author: Zygmunt Krynicki <zygmunt.krynicki@linaro.org>
 #
-# This file is part of Launch Control.
+# This file is part of linaro-django-xmlrpc.
 #
-# Launch Control is free software: you can redistribute it and/or modify
+# linaro-django-xmlrpc is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License version 3
 # as published by the Free Software Foundation
 #
-# Launch Control is distributed in the hope that it will be useful,
+# linaro-django-xmlrpc is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with Launch Control.  If not, see <http://www.gnu.org/licenses/>.
+# along with linaro-django-xmlrpc.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Linaro XML-RPC Application for Django (package)
+Flexible XML-RPC application for Django
 """
 
-
-__version__ = "0.2.1.final"
-try:
-    import versiontools
-    __version__ = versiontools.Version(*__version__.split("."))
-except ImportError:
-    pass
-
+__version__ = (0, 3, 0, "dev", 0)
