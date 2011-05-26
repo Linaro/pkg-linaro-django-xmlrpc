@@ -25,7 +25,7 @@ import xmlrpclib
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
-from django_testscenarios import TestCase
+from django_testscenarios.ubertest import TestCase
 
 from linaro_django_xmlrpc.models import (
     AuthToken,
