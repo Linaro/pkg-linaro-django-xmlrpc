@@ -428,5 +428,3 @@ class AuthTokenTests(TestCase):
         token = AuthToken.objects.create(user=self.user)
         user = AuthToken.get_user_for_secret(token.secret)
         self.assertEqual(user, self.user)
-
-
