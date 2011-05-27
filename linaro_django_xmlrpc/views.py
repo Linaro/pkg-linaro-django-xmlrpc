@@ -38,14 +38,6 @@ from linaro_django_xmlrpc.models import (
 from linaro_django_xmlrpc.forms import AuthTokenForm
 
 
-def _get_user_and_secret(auth_string):
-    scheme, value = auth_string.split(" ", 1)
-    if scheme != "Basic":
-        raise ValueError("Only basic authentication is supported")
-    decoded_value = base64.standard_b64decode(value)
-    return decoded_value.split(":", 1)
-
-
 @csrf_exempt
 def handler(request, mapper):
     """
@@ -60,19 +52,32 @@ def handler(request, mapper):
         response = HttpResponse(mimetype="application/xml")
         dispatcher = Dispatcher(mapper)
 
-        auth_header = request.META.get('HTTP_AUTHORIZATION')
+        auth_string = request.META.get('HTTP_AUTHORIZATION')
 
-        if auth_header is not None:
+        if auth_string is not None:
+            if ' ' not in auth_string:
+                return HttpResponse(status=404)
+            scheme, value = auth_string.split(" ", 1)
+            if scheme != "Basic":
+                return HttpResponse(
+                    "Only Basic auth is supported", status=401)
             try:
-                username, secret = _get_user_and_secret(auth_header)
+                decoded_value = base64.standard_b64decode(value)
+            except TypeError:
+                return HttpResponse(status=400)
+            if ':' not in decoded_value:
+                return HttpResponse(status=400)
+            username, secret = decoded_value.split(":", 1)
+            try:
                 user = AuthToken.get_user_for_secret(username, secret)
-            except ValueError:
-                user = None
             except Exception:
                 import logging
                 logging.exception("bug")
+            if user is None:
+                return HttpResponse(
+                    "Invalid token", status=401)
         else:
-            username = None
+            user = None
         result = dispatcher.marshalled_dispatch(raw_data, user)
         response.write(result)
         response['Content-length'] = str(len(response.content))
