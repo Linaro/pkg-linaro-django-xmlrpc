@@ -32,14 +32,14 @@ import linaro_django_xmlrpc
 
 
 setup(
-    name = 'linaro-django-xmlrpc',
+    name='linaro-django-xmlrpc',
     version=versiontools.format_version(linaro_django_xmlrpc.__version__),
-    author = "Zygmunt Krynicki",
-    author_email = "zygmunt.krynicki@linaro.org",
-    packages = find_packages(),
-    url = 'https://launchpad.net/linaro-django-xmlrpc',
-    test_suite = 'linaro_django_xmlrpc.test_project.tests.run_tests',
-    description = "Flexible XML-RPC application for Django",
+    author="Zygmunt Krynicki",
+    author_email="zygmunt.krynicki@linaro.org",
+    packages=find_packages(),
+    url='https://launchpad.net/linaro-django-xmlrpc',
+    test_suite='linaro_django_xmlrpc.test_project.tests.run_tests',
+    description="Flexible XML-RPC application for Django",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -53,7 +53,7 @@ setup(
         'django-testscenarios >= 0.7.dev',
         'django-testproject >= 0.1.dev',
     ],
-    setup_requires = [
+    setup_requires=[
         'versiontools >= 1.1',
     ],
     install_requires=[

@@ -112,6 +112,7 @@ class MapperTests(TestCase):
     def test_register_overwrites_previous_binding(self):
         class TestAPI1(ExposedAPI):
             pass
+
         class TestAPI2(ExposedAPI):
             pass
         self.mapper.register(TestAPI1, 'API')
@@ -151,8 +152,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI, '')
@@ -163,8 +166,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI)
@@ -175,8 +180,10 @@ class MapperTests(TestCase):
         class TestAPI(ExposedAPI):
             def a(self):
                 pass
+
             def b(self):
                 pass
+
             def c(self):
                 pass
         self.mapper.register(TestAPI())
@@ -187,6 +194,7 @@ class MapperTests(TestCase):
         class SourceA(ExposedAPI):
             def a(self):
                 pass
+
         class SourceB(ExposedAPI):
             def a(self):
                 pass
@@ -414,9 +422,10 @@ class AuthTokenTests(TestCase):
     def test_last_used_on_is_initially_empty(self):
         token = AuthToken.objects.create(user=self.user)
         self.assertTrue(token.last_used_on is None)
-    
+
     def test_lookup_user_for_secret_returns_none_on_failure(self):
-        user = AuthToken.get_user_for_secret(self.user.username, self._INEXISTING_SECRET)
+        user = AuthToken.get_user_for_secret(
+            self.user.username, self._INEXISTING_SECRET)
         self.assertTrue(user is None)
 
     def test_get_user_for_secret_finds_valid_user(self):
@@ -426,12 +435,13 @@ class AuthTokenTests(TestCase):
 
     def test_get_user_for_secret_checks_if_the_user_matches(self):
         token = AuthToken.objects.create(user=self.user)
-        user = AuthToken.get_user_for_secret(self._INEXISTING_USER, token.secret)
+        user = AuthToken.get_user_for_secret(
+            self._INEXISTING_USER, token.secret)
         self.assertEqual(user, None)
 
     def test_get_user_for_secret_sets_last_used_on(self):
         token = AuthToken.objects.create(user=self.user)
-        user = AuthToken.get_user_for_secret(self.user.username, token.secret)
+        AuthToken.get_user_for_secret(self.user.username, token.secret)
         # Refresh token
         token = AuthToken.objects.get(user=self.user)
         self.assertNotEqual(token.last_used_on, None)

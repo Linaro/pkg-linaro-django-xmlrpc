@@ -59,9 +59,10 @@ def handler(request, mapper):
         raw_data = request.raw_post_data
         response = HttpResponse(mimetype="application/xml")
         dispatcher = Dispatcher(mapper)
-        
+
         try:
-            username, secret = _get_user_and_secret(request.META['HTTP_AUTHORIZATION'])
+            username, secret = _get_user_and_secret(
+                request.META['HTTP_AUTHORIZATION'])
             user = AuthToken.get_user_for_secret(username, secret)
         except ValueError:
             user = None
@@ -82,8 +83,8 @@ def handler(request, mapper):
         return render_to_response('linaro_django_xmlrpc/api.html', {
             'methods': methods,
             'site_url': "http://{domain}".format(
-                domain = Site.objects.get_current().domain)
-        }, RequestContext(request))
+                domain=Site.objects.get_current().domain)},
+            RequestContext(request))
 
 
 @csrf_exempt
@@ -100,10 +101,14 @@ def tokens(request):
     """
     List of tokens for an authenticated user
     """
-    tokens = AuthToken.objects.filter(user=request.user).order_by("last_used_on")
-    return render_to_response("linaro_django_xmlrpc/tokens.html", {
-        "token_list": tokens,
-    }, RequestContext(request))
+    tokens = AuthToken.objects.filter(user=request.user).order_by(
+        "last_used_on")
+    return render_to_response(
+        "linaro_django_xmlrpc/tokens.html",
+        {
+            "token_list": tokens,
+        },
+        RequestContext(request))
 
 
 @login_required
@@ -117,12 +122,13 @@ def create_token(request):
             form.save(commit=False)
             form.instance.user = request.user
             form.instance.save()
-            return HttpResponseRedirect(reverse("linaro_django_xmlrpc.views.tokens"))
+            return HttpResponseRedirect(
+                reverse("linaro_django_xmlrpc.views.tokens"))
     else:
         form = AuthTokenForm()
-    return render_to_response("linaro_django_xmlrpc/create_token.html", {
-        "form": form
-    }, RequestContext(request))
+    return render_to_response(
+        "linaro_django_xmlrpc/create_token.html",
+        {"form": form}, RequestContext(request))
 
 
 @login_required
@@ -130,7 +136,11 @@ def delete_token(request, object_id):
     token = get_object_or_404(AuthToken, pk=object_id, user=request.user)
     if request.method == 'POST':
         token.delete()
-        return HttpResponseRedirect(reverse("linaro_django_xmlrpc.views.tokens"))
-    return render_to_response("linaro_django_xmlrpc/authtoken_confirm_delete.html", {
-        'token': token
-    }, RequestContext(request))
+        return HttpResponseRedirect(
+            reverse("linaro_django_xmlrpc.views.tokens"))
+    return render_to_response(
+        "linaro_django_xmlrpc/authtoken_confirm_delete.html",
+        {
+            'token': token,
+        },
+        RequestContext(request))

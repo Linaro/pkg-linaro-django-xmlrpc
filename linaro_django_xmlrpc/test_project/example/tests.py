@@ -9,6 +9,7 @@ from django.test import TestCase
 
 from example.models import ExampleAPI
 
+
 class ExampleAPITestCase(TestCase):
 
     def test_foo(self):
