@@ -60,15 +60,19 @@ def handler(request, mapper):
         response = HttpResponse(mimetype="application/xml")
         dispatcher = Dispatcher(mapper)
 
-        try:
-            username, secret = _get_user_and_secret(
-                request.META['HTTP_AUTHORIZATION'])
-            user = AuthToken.get_user_for_secret(username, secret)
-        except ValueError:
-            user = None
-        except Exception:
-            import logging
-            logging.exception("bug")
+        auth_header = request.META.get('HTTP_AUTHORIZATION')
+
+        if auth_header is not None:
+            try:
+                username, secret = _get_user_and_secret(auth_header)
+                user = AuthToken.get_user_for_secret(username, secret)
+            except ValueError:
+                user = None
+            except Exception:
+                import logging
+                logging.exception("bug")
+        else:
+            username = None
         result = dispatcher.marshalled_dispatch(raw_data, user)
         response.write(result)
         response['Content-length'] = str(len(response.content))
