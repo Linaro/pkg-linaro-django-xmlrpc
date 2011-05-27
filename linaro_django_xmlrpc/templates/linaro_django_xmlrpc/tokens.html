@@ -19,6 +19,8 @@
     <td>
       <button id="button_{{ forloop.counter }}" onclick='document.getElementById("secret_{{ forloop.counter }}").style.display="block"; this.style.display="none";'>Show</button>
       <code id="secret_{{ forloop.counter }}" style="display: none;">{{ token.secret }}</code>
+    </td>
+    <td>
       <a href="{% url linaro_django_xmlrpc.views.delete_token token.pk %}">delete this token</a>
     </td>
   </tr>
