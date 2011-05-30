@@ -21,6 +21,7 @@ XML-RPC views
 """
 
 import base64
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.csrf.middleware import csrf_exempt
@@ -71,7 +72,6 @@ def handler(request, mapper):
             try:
                 user = AuthToken.get_user_for_secret(username, secret)
             except Exception:
-                import logging
                 logging.exception("bug")
             if user is None:
                 response = HttpResponse("Invalid token", status=401)
@@ -85,6 +85,8 @@ def handler(request, mapper):
         response['Content-length'] = str(len(response.content))
         return response
     else:
+        # Split this to different view, redirect.
+        # TODO: check xml-rpc spec to see what is recommended on GET requests.
         system = SystemAPI(mapper)
         methods = [{
             'name': method,
@@ -139,7 +141,10 @@ def create_token(request):
         form = AuthTokenForm()
     return render_to_response(
         "linaro_django_xmlrpc/create_token.html",
-        {"form": form}, RequestContext(request))
+        {
+            "form": form,
+        },
+        RequestContext(request))
 
 
 @login_required
@@ -153,5 +158,25 @@ def delete_token(request, object_id):
         "linaro_django_xmlrpc/authtoken_confirm_delete.html",
         {
             'token': token,
+        },
+        RequestContext(request))
+
+
+@login_required
+def edit_token(request, object_id):
+    token = get_object_or_404(AuthToken, pk=object_id, user=request.user)
+    if request.method == "POST":
+        form = AuthTokenForm(request.POST, instance=token)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse("linaro_django_xmlrpc.views.tokens"))
+    else:
+        form = AuthTokenForm(instance=token)
+    return render_to_response(
+        "linaro_django_xmlrpc/edit_token.html",
+        {
+            "token": token,
+            "form": form,
         },
         RequestContext(request))
