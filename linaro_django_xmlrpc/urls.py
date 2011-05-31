@@ -26,4 +26,5 @@ urlpatterns = patterns(
     url(r'^tokens/$', "tokens"),
     url(r'^tokens/create/$', "create_token"),
     url(r'^tokens/(?P<object_id>\d+)/delete/$', "delete_token"),
+    url(r'^tokens/(?P<object_id>\d+)/edit/$', "edit_token"),
 )
