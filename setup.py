@@ -18,7 +18,13 @@
 # along with linaro-django-xmlrpc.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from setuptools import setup, find_packages
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    print "This package requires setuptools to be configured"
+    print "It can be installed with debian/ubuntu package python-setuptools"
+    raise
+
 
 try:
     import versiontools
@@ -41,7 +47,7 @@ setup(
     test_suite='linaro_django_xmlrpc.test_project.tests.run_tests',
     description="Flexible XML-RPC application for Django",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Operating System :: OS Independent",
@@ -50,14 +56,14 @@ setup(
         "Framework :: Django",
     ],
     tests_require=[
-        'django-testscenarios >= 0.7.dev',
-        'django-testproject >= 0.1.dev',
+        'django-testscenarios >= 0.7',
+        'django-testproject >= 0.1',
     ],
     setup_requires=[
         'versiontools >= 1.1',
     ],
     install_requires=[
-        'Django >= 1.0',
+        'django >= 1.2',
     ],
     include_package_data=True,
 )
