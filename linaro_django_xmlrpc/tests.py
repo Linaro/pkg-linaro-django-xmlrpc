@@ -383,9 +383,133 @@ class SystemAPITest(TestCase):
         retval = self.system_api.methodSignature("TestAPI.int_to_str")
         self.assertEqual(retval, ['str', 'int'])
 
+    def test_multicall_with_empty_list(self):
+        retval = self.system_api.multicall([])
+        self.assertEqual(retval, [])
+
+    def test_multicall_calls_methods(self):
+        # Have some dummy API to talk to
+        class TestAPI(ExposedAPI):
+
+            def foo(self):
+                return "foo-result"
+
+            def bar(self, arg):
+                return arg
+        # Register this API with the mapper that we're talking to
+        self.mapper.register(TestAPI)
+        # Construct multicall arguments for calling both functions
+        calls = [
+            {"methodName": "TestAPI.foo", "params": []},
+            {"methodName": "TestAPI.bar", "params": ["bar-result"]},
+        ]
+        # Expected results, methods get called
+        expected = [
+            "foo-result",
+            "bar-result"
+        ]
+        observerd = self.system_api.multicall(calls)
+        self.assertEqual(observerd, expected)
+
+    def test_multicall_just_boxes_faults(self):
+        # Have some dummy API to talk to
+        class TestAPI(ExposedAPI):
+
+            def boom(self):
+                raise xmlrpclib.Fault(1, "boom")
+
+            def echo(self, arg):
+                return arg
+        # Register this API with the mapper that we're talking to
+        self.mapper.register(TestAPI)
+        # Construct multicall arguments for calling both functions
+        calls = [
+            {"methodName": "TestAPI.echo", "params": ["before"]},
+            {"methodName": "TestAPI.boom", "params": []},
+            {"methodName": "TestAPI.echo", "params": ["after"]},
+        ]
+        observed = self.system_api.multicall(calls)
+        # Ping is called with 'before'
+        self.assertEqual(observed[0], "before")
+        # Note that at this point the exception is returned as-is. It will be
+        # converted to proper xml-rpc encoding by the dispatcher. Here we do
+        # manual comparison as xmlrpclib.Fault does not implement __eq__
+        # properly.
+        self.assertEqual(observed[1].faultCode, 1)
+        self.assertEqual(observed[1].faultString, "boom")
+        # Ping is called with 'after'
+        self.assertEqual(observed[2], "after")
+
+    def test_multicall_wants_a_list_of_sub_calls(self):
+        # XXX: Use TestCaseWithInvariants in the future
+        for bad_stuff in [None, {}, True, False, -1, 10000, "foobar"]:
+            try:
+                self.system_api.multicall(bad_stuff)
+            except xmlrpclib.Fault as ex:
+                self.assertEqual(ex.faultCode, FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+                self.assertEqual(ex.faultString, "system.multicall expected a list of methods to call")
+            else:
+                self.fail("Should have raised an exception")
+
+    def test_multicall_dispatch_one_wants_a_dict(self):
+        # XXX: Use TestCaseWithInvariants in the future
+        for bad_stuff in [None, [], True, False, -1, 10000, "foobar"]:
+            result = self.system_api._multicall_dispatch_one(bad_stuff)
+            self.assertIsInstance(result, xmlrpclib.Fault)
+            self.assertEqual(
+                result.faultCode,
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
+    def test_multicall_dispatch_one_wants_methodName(self):
+        result = self.system_api._multicall_dispatch_one({})
+        self.assertIsInstance(result, xmlrpclib.Fault)
+        self.assertEqual(
+            result.faultCode,
+            FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
+    def test_multicall_dispatch_one_wants_methodName_to_be_a_string(self):
+        result = self.system_api._multicall_dispatch_one(
+            {"methodName": False})
+        self.assertIsInstance(result, xmlrpclib.Fault)
+        self.assertEqual(
+            result.faultCode,
+            FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
+    def test_multicall_dispatch_one_wants_params(self):
+        result = self.system_api._multicall_dispatch_one(
+            {"methodName": "system.listMethods"})
+        self.assertIsInstance(result, xmlrpclib.Fault)
+        self.assertEqual(
+            result.faultCode,
+            FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
+    def test_multicall_dispatch_one_wants_params_to_be_a_list(self):
+        result = self.system_api._multicall_dispatch_one(
+            {"methodName": "system.listMethods", "params": False})
+        self.assertIsInstance(result, xmlrpclib.Fault)
+        self.assertEqual(
+            result.faultCode,
+            FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
+    def test_listMethods_exists(self):
+        self.mapper.register(SystemAPI, 'system')
+        self.assertIn("system.listMethods", self.system_api.listMethods())
+
+    def test_methodHelp_exists(self):
+        self.mapper.register(SystemAPI, 'system')
+        self.assertIn("system.methodHelp", self.system_api.listMethods())
+
+    def test_methodSignature_exists(self):
+        self.mapper.register(SystemAPI, 'system')
+        self.assertIn("system.methodSignature", self.system_api.listMethods())
+
     def test_getCapabilities_exists(self):
         self.mapper.register(SystemAPI, 'system')
         self.assertIn("system.getCapabilities", self.system_api.listMethods())
+
+    def test_multicall_exists(self):
+        self.mapper.register(SystemAPI, 'system')
+        self.assertIn("system.multicall", self.system_api.listMethods())
 
     def test_fault_interop_capabilitiy_supported(self):
         self.assertIn("faults_interop", self.system_api.getCapabilities())
