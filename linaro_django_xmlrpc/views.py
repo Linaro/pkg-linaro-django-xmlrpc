@@ -57,7 +57,7 @@ def handler(request, mapper):
 
         if auth_string is not None:
             if ' ' not in auth_string:
-                return HttpResponse("Invalid HTTP_AUTHORIZATION header",status=400)
+                return HttpResponse("Invalid HTTP_AUTHORIZATION header", status=400)
             scheme, value = auth_string.split(" ", 1)
             if scheme != "Basic":
                 return HttpResponse(
