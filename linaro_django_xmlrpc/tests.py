@@ -383,6 +383,19 @@ class SystemAPITest(TestCase):
         retval = self.system_api.methodSignature("TestAPI.int_to_str")
         self.assertEqual(retval, ['str', 'int'])
 
+    def test_getCapabilities_exists(self):
+        self.mapper.register(SystemAPI, 'system')
+        self.assertIn("system.getCapabilities", self.system_api.listMethods())
+
+    def test_fault_interop_capabilitiy_supported(self):
+        self.assertIn("faults_interop", self.system_api.getCapabilities())
+
+    def test_auth_token_capability_supported(self):
+        self.assertIn("auth_token", self.system_api.getCapabilities())
+
+    def test_introspect_capability_supported(self):
+        self.assertIn("introspect", self.system_api.getCapabilities())
+
 
 class HandlerTests(TestCase):
 

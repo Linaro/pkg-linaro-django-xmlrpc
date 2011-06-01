@@ -423,9 +423,6 @@ class SystemAPI(ExposedAPI):
     introspection specification. When doing so make sure to map an _instance_
     and not the class as SystemAPI needs access to the mapper.
     """
-    #TODO: Implement and expose system.getCapabilities() and advertise
-    #      support for standardised fault codes.
-    #      See: http://tech.groups.yahoo.com/group/xml-rpc/message/2897
 
     def __init__(self, context):
         if context is None:
@@ -455,3 +452,28 @@ class SystemAPI(ExposedAPI):
         else:
             import pydoc
             return pydoc.getdoc(impl)
+
+    def getCapabilities(self):
+        """
+        Return XML-RPC Server capabilities.
+
+        See: http://groups.yahoo.com/group/xml-rpc/message/2897
+        """
+        return {
+            "introspect": {
+                "specUrl": "http://xmlrpc-c.sourceforge.net/xmlrpc-c/introspection.html",
+                "specVersion": 1
+            },
+            "faults_interop": {
+                "specUrl": "http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php",
+                "specVersion": 20010516
+            },
+            "auth_token": {
+                # XXX: We need some good way to indicate we support token
+                # authentication Month and date is actually taken from the time
+                # this spec was registered in lanuchpad. It was was *not*
+                # copy-pasted from fault codes spec :-)
+                "specUrl": "https://blueprints.launchpad.net/linaro-django-xmlrpc/+spec/other-o-linaro-xml-rpc-auth-tokens",
+                "specVersion": 20110516
+            }
+        }
