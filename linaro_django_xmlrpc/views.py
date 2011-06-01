@@ -33,6 +33,7 @@ from django.template import RequestContext
 
 from linaro_django_xmlrpc.models import (
     AuthToken,
+    CallContext,
     Dispatcher,
     SystemAPI,
 )
@@ -87,7 +88,8 @@ def handler(request, mapper):
     else:
         # Split this to different view, redirect.
         # TODO: check xml-rpc spec to see what is recommended on GET requests.
-        system = SystemAPI(mapper)
+        context = CallContext(user=None, mapper=mapper, dispatcher=None)
+        system = SystemAPI(context)
         methods = [{
             'name': method,
             'signature': system.methodSignature(method),

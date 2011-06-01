@@ -131,6 +131,54 @@ class FaultCodes(object):
     TRANSPORT_ERROR = -32300
 
 
+class CallContext(object):
+    """
+    Call context encapsulates all runtime information about a particular call
+    to ExposedAPI subclasses. In practice it binds the user, mapper and
+    dispatcher together.
+    """
+
+    def __init__(self, user, mapper, dispatcher):
+        if user is not None and user.is_authenticated() and user.is_active:
+            self._user = user
+        else:
+            self._user = None
+        self._mapper = mapper
+        self._dispatcher = dispatcher
+
+    @property
+    def user(self):
+        """
+        Return the user making the request.
+
+        Currently only requests authenticated with XML-RPC tokens
+        allow users to make authenticated requests.
+        """
+        return self._user
+
+    @property
+    def mapper(self):
+        """
+        Return the XML-RPC mapper.
+
+        Mapper provides a binding between method names and ExposedAPI classes.
+        It is normally only needed in special situations, such as when
+        implementing SystemAPI class.
+        """
+        return self._mapper
+
+    @property
+    def dispatcher(self):
+        """
+        Return the XML-RPC dispatcher object.
+
+        Dispatcher provides a mechanism for invoking XML-RPC methods. It is
+        normally only needed in special situations, such as when implementing
+        SystemAPI class.
+        """
+        return self._dispatcher
+
+
 class ExposedAPI(object):
     """
     Base class for exposing code via XML-RPC.
@@ -139,7 +187,7 @@ class ExposedAPI(object):
     with _). Each method should have a sensible docstring as it will be
     exposed to developers accessing your services.
 
-    To work with authentication you can inspect the _user instance
+    To work with authentication you can inspect the user instance
     variable. If the request was authenticated using any available
     authentication method the instance variable will point to a
     django.contrib.auth.models.User instance. You will _never_ get
@@ -147,17 +195,24 @@ class ExposedAPI(object):
     None automatically.
     """
 
-    def __init__(self, user=None):
-        if user is not None and user.is_authenticated() and user.is_active:
-            self.user = user
+    def __init__(self, context=None):
+        if context is not None and not isinstance(context, CallContext):
+            raise TypeError(
+                "context must be a subclass of CallContext (got %r)" % context)
+        self._context = context
+
+    @property
+    def user(self):
+        if self._context is not None:
+            return self._context.user
         else:
-            self.user = None
+            return None
 
 
 class Mapper(object):
     """
-    Simple namespace for mapping multiple subclasses of ExposedAPI
-    subclasses using one dispatcher.
+    Simple namespace for mapping multiple subclasses of ExposedAPI using one
+    dispatcher.
 
     >>> class Hello(ExposedAPI):
     ...     def world(self):
@@ -177,29 +232,28 @@ class Mapper(object):
     def __init__(self):
         self.registered = {}
 
-    def register(self, obj_or_cls, name=None):
+    def register(self, cls, name=None):
         """
         Expose specified object or class under specified name
 
         Name defaults to the name of the class.
         """
+        if not isinstance(cls, type) or not issubclass(cls, ExposedAPI):
+            raise TypeError(
+                "Only ExposedAPI subclasses can be registered with the mapper")
         if name is None:
-            if isinstance(obj_or_cls, type):
-                name = obj_or_cls.__name__
-            else:
-                name = obj_or_cls.__class__.__name__
-        self.registered[name] = obj_or_cls
+            name = cls.__name__
+        if name in self.registered:
+            raise ValueError(
+                "Name %r is already registered with this mapper" % name)
+        self.registered[name] = cls
 
-    def lookup(self, name, user=None):
+    def lookup(self, name, context=None):
         """
         Lookup the callable associated with the specified name.
 
         The callable is a bound method of a registered object or a bound
         method of a freshly instantiated object of a registered class.
-
-        The optional argument user is passed to the class constructor. If the
-        specified method name belongs to a registered object user identity
-        information is not available.
 
         @return A callable or None if the name does not designate any
         registered entity.
@@ -211,14 +265,11 @@ class Mapper(object):
             api_name = ''
         if meth_name.startswith("_"):
             return
-        obj_or_cls = self.registered.get(api_name)
-        if obj_or_cls is None:
+        cls = self.registered.get(api_name)
+        if cls is None:
             return
         try:
-            if isinstance(obj_or_cls, type):
-                obj = obj_or_cls(user)
-            else:
-                obj = obj_or_cls
+            obj = cls(context)
         except:
             # TODO: Perhaps this should be an APPLICATION_ERROR?
             logging.exception("unable to instantiate stuff")
@@ -255,7 +306,7 @@ class Mapper(object):
 
     def register_introspection_methods(self):
         """
-        Register SystemAPI instance as 'system' object.
+        Register SystemAPI as 'system' object.
 
         This method is similar to the SimpleXMLRPCServer method with the same
         name. It exposes several standard XML-RPC methods that make it
@@ -263,7 +314,7 @@ class Mapper(object):
 
         For reference see the SystemAPI class.
         """
-        self.register(SystemAPI(self), 'system')
+        self.register(SystemAPI, 'system')
 
 
 class Dispatcher(object):
@@ -311,15 +362,18 @@ class Dispatcher(object):
         """
         Dispatch marshalled request (encoded with XML-RPC envelope).
 
+        This is the entry point to the Dispatcher API.
+
         Returns the text of the response
         """
+        # Construct call context that binds user, mapper and dispatcher
+        context = CallContext(user, mapper=self.mapper, dispatcher=self)
         try:
-            method, params = self.decode_request(data)
-            response = self.dispatch(method, params, user)
+            method_name, params = self.decode_request(data)
+            response = self.dispatch(method_name, params, context)
         except xmlrpclib.Fault as fault:
             # Push XML-RPC faults to the client
-            response = xmlrpclib.dumps(
-                fault, allow_none=self.allow_none)
+            response = xmlrpclib.dumps(fault, allow_none=self.allow_none)
         else:
             # Package responses and send them to the client
             response = (response,)
@@ -327,29 +381,29 @@ class Dispatcher(object):
                 response, methodresponse=1, allow_none=self.allow_none)
         return response
 
-    def dispatch(self, method, params, user=None):
+    def dispatch(self, method_name, params, context):
         """
-        Dispatch method with specified parameters
+        Dispatch method with the specified name, parameters and context
         """
         try:
-            impl = self.mapper.lookup(method, user)
+            impl = self.mapper.lookup(method_name, context)
             if impl is None:
                 raise xmlrpclib.Fault(
                         FaultCodes.ServerError.REQUESTED_METHOD_NOT_FOUND,
-                        "No such method: %r" % method)
-                # TODO: check parameter types before calling
+                        "No such method: %r" % method_name)
+            # TODO: check parameter types before calling
             return impl(*params)
         except xmlrpclib.Fault:
             # Forward XML-RPC Faults to the client
             raise
         except:
             # Treat all other exceptions as internal errors
-            self.handle_internal_error(method, params)
+            self.handle_internal_error(method_name, params)
             raise xmlrpclib.Fault(
                 FaultCodes.ServerError.INTERNAL_XML_RPC_ERROR,
-                "Internal Server Error")
+                "Internal Server Error (details hidden)")
 
-    def handle_internal_error(self, method, params):
+    def handle_internal_error(self, method_name, params):
         """
         Handle exceptions raised while dispatching registered methods.
 
@@ -358,10 +412,10 @@ class Dispatcher(object):
         """
         logging.exception(
             "Unable to dispatch XML-RPC method %s(%s)",
-            method, params)
+            method_name, params)
 
 
-class SystemAPI(object):
+class SystemAPI(ExposedAPI):
     """
     XML-RPC System API
 
@@ -373,14 +427,17 @@ class SystemAPI(object):
     #      support for standardised fault codes.
     #      See: http://tech.groups.yahoo.com/group/xml-rpc/message/2897
 
-    def __init__(self, mapper):
-        self.mapper = mapper
+    def __init__(self, context):
+        if context is None:
+            raise ValueError(
+                "SystemAPI needs to be constructed with a real CallContext")
+        super(SystemAPI, self).__init__(context)
 
     def listMethods(self):
-        return self.mapper.list_methods()
+        return self._context.mapper.list_methods()
 
     def methodSignature(self, method_name):
-        impl = self.mapper.lookup(method_name)
+        impl = self._context.mapper.lookup(method_name, self._context)
         if impl is None:
             return ""
         # When signature is not known return "undef"
@@ -392,7 +449,7 @@ class SystemAPI(object):
         """
         Return documentation for specified method
         """
-        impl = self.mapper.lookup(method_name)
+        impl = self._context.mapper.lookup(method_name, self._context)
         if impl is None:
             return ""
         else:

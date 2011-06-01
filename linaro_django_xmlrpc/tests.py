@@ -28,6 +28,7 @@ from django_testscenarios.ubertest import TestCase, TestCaseWithScenarios
 
 from linaro_django_xmlrpc.models import (
     AuthToken,
+    CallContext,
     Dispatcher,
     ExposedAPI,
     FaultCodes,
@@ -68,26 +69,42 @@ class ExampleAPI(ExposedAPI):
         return "foo"
 
 
-class ExposedAPITests(TestCase):
-
-    def test_user_defaults_to_None(self):
-        api = ExposedAPI()
-        self.assertEqual(api.user, None)
+class CallContextTests(TestCase):
 
     def test_unauthenticated_users_are_ignored(self):
         user = MockUser(is_authenticated=False, is_active=True)
-        api = ExposedAPI(user)
-        self.assertEqual(api.user, None)
+        context = CallContext(user, None, None)
+        self.assertEqual(context.user, None)
 
     def test_inactive_users_are_ignored(self):
         user = MockUser(is_authenticated=True, is_active=False)
-        api = ExposedAPI(user)
-        self.assertEqual(api.user, None)
+        context = CallContext(user, None, None)
+        self.assertEqual(context.user, None)
 
     def test_authenticated_active_users_are_allowed(self):
         user = MockUser(is_authenticated=True, is_active=True)
-        api = ExposedAPI(user)
-        self.assertEqual(api.user, user)
+        context = CallContext(user, None, None)
+        self.assertEqual(context.user, user)
+
+
+class ExposedAPITests(TestCase):
+
+    def test_context_must_be_of_proper_clasS(self):
+        self.assertRaises(TypeError, ExposedAPI, object())
+
+    def test_context_defaults_to_None(self):
+        api = ExposedAPI()
+        self.assertIs(api._context, None)
+
+    def test_without_context_user_is_None(self):
+        api = ExposedAPI()
+        self.assertIs(api.user, None)
+
+    def test_user_returns_context_user(self):
+        user = MockUser(True, True)
+        context = CallContext(user, None, None)
+        api = ExposedAPI(context)
+        self.assertIs(api.user, context.user)
 
 
 class MapperTests(TestCase):
@@ -96,28 +113,27 @@ class MapperTests(TestCase):
         super(MapperTests, self).setUp()
         self.mapper = Mapper()
 
+    def test_register_checks_type(self):
+        self.assertRaises(TypeError, self.mapper.register, object)
+
     def test_register_guesses_class_name(self):
         self.mapper.register(ExampleAPI)
-        self.assertTrue("ExampleAPI" in self.mapper.registered)
-
-    def test_register_guesses_object_name(self):
-        self.mapper.register(ExampleAPI())
         self.assertTrue("ExampleAPI" in self.mapper.registered)
 
     def test_register_respects_explicit_class_name(self):
         self.mapper.register(ExampleAPI, "example_api")
         self.assertTrue("example_api" in self.mapper.registered)
 
-    def test_register_overwrites_previous_binding(self):
+    def test_register_prevents_overwrites_of_previous_binding(self):
         class TestAPI1(ExposedAPI):
             pass
 
         class TestAPI2(ExposedAPI):
             pass
         self.mapper.register(TestAPI1, 'API')
-        self.mapper.register(TestAPI2, 'API')
+        self.assertRaises(ValueError, self.mapper.register, TestAPI2, 'API')
         self.assertTrue('API' in self.mapper.registered)
-        self.assertTrue(self.mapper.registered['API'] is TestAPI2)
+        self.assertTrue(self.mapper.registered['API'] is TestAPI1)
 
     def test_lookup_finds_method(self):
         self.mapper.register(ExampleAPI)
@@ -139,6 +155,17 @@ class MapperTests(TestCase):
     def test_lookup_returns_none_if_object_or_class_not_found(self):
         retval = self.mapper.lookup("ExampleAPI.foo")
         self.assertEqual(retval, None)
+
+    def test_lookup_passes_context_to_exposed_api(self):
+        class TestAPI(ExposedAPI):
+
+            def foo(self):
+                pass
+        self.mapper.register(TestAPI, 'API')
+        context = CallContext(None, self.mapper, None)
+        retval = self.mapper.lookup('API.foo', context)
+        # bound method seems to have im_self attribute pointing back to self
+        self.assertIs(retval.im_self._context, context)
 
     def test_list_methods_without_methods(self):
         class TestAPI(ExposedAPI):
@@ -172,20 +199,6 @@ class MapperTests(TestCase):
             def c(self):
                 pass
         self.mapper.register(TestAPI)
-        retval = self.mapper.list_methods()
-        self.assertEqual(retval, ['TestAPI.a', 'TestAPI.b', 'TestAPI.c'])
-
-    def test_list_methods_from_object_scope(self):
-        class TestAPI(ExposedAPI):
-            def a(self):
-                pass
-
-            def b(self):
-                pass
-
-            def c(self):
-                pass
-        self.mapper.register(TestAPI())
         retval = self.mapper.list_methods()
         self.assertEqual(retval, ['TestAPI.a', 'TestAPI.b', 'TestAPI.c'])
 
@@ -267,9 +280,12 @@ class DispatcherTests(TestCase):
             self.fail("Calling missing method did not raise an exception")
 
     def test_internal_error_handler_is_called_on_exception(self):
+        self.was_called = False
+
         def handler(method, params):
             self.assertEqual(method, 'internal_boom')
             self.assertEqual(params, ())
+            self.was_called = True
         self.dispatcher.handle_internal_error = handler
         try:
             self.xml_rpc_call("internal_boom")
@@ -277,6 +293,7 @@ class DispatcherTests(TestCase):
             pass
         else:
             self.fail("Exception not raised")
+        self.assertTrue(self.was_called)
 
     def test_standard_fault_code_for_internal_error(self):
         # This handler is here just to prevent the default one from
@@ -311,7 +328,10 @@ class SystemAPITest(TestCase):
     def setUp(self):
         super(SystemAPITest, self).setUp()
         self.mapper = Mapper()
-        self.system_api = SystemAPI(self.mapper)
+        self.dispatcher = Dispatcher(self.mapper)
+        self.context = CallContext(
+            user=None, mapper=self.mapper, dispatcher=self.dispatcher)
+        self.system_api = SystemAPI(self.context)
 
     def test_listMethods_just_calls_mapper_list_methods(self):
         obj = object()
@@ -394,7 +414,6 @@ class HandlerTests(TestCase):
 
 class HandlerAuthTests(TestCaseWithScenarios):
 
-
     scenarios = [
         ('no_space_in_http_authorization', {
             'HTTP_AUTHORIZATION': "no_space_here",
@@ -422,7 +441,6 @@ class HandlerAuthTests(TestCaseWithScenarios):
             'status_code': 401,
         }),
     ]
-
 
     def setUp(self):
         super(HandlerAuthTests, self).setUp()
