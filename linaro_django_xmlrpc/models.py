@@ -461,6 +461,10 @@ class SystemAPI(ExposedAPI):
         """
         return {
             "introspect": {
+                # XXX: This URL is dead, the actual URL that works is:
+                # http://xmlrpc-c.sourceforge.net/introspection.html This is,
+                # however, what the spec mandates (visit the URL above to
+                # cross-refernce the relevant fragment).
                 "specUrl": "http://xmlrpc-c.sourceforge.net/xmlrpc-c/introspection.html",
                 "specVersion": 1
             },
