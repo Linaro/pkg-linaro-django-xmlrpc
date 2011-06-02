@@ -453,6 +453,76 @@ class SystemAPI(ExposedAPI):
             import pydoc
             return pydoc.getdoc(impl)
 
+    def _multicall_dispatch_one(self, subcall):
+        """
+        Dispatch one multicall request
+        """
+        if not isinstance(subcall, dict):
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall expected struct")
+        if 'methodName' not in subcall:
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall methodName not specified")
+        methodName = subcall['methodName']
+        if not isinstance(methodName, basestring):
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall methodName must be a string")
+        if 'params' not in subcall:
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall params not specified")
+        params = subcall['params']
+        if not isinstance(params, list):
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall params must be an array")
+        try:
+            return self._context.dispatcher.dispatch(
+                methodName, params, self._context)
+        except xmlrpclib.Fault as fault:
+            return fault
+
+    @xml_rpc_signature('array', 'array')
+    def multicall(self, subcalls):
+        """
+        Call multiple methods with one request.
+
+        See: http://web.archive.org/web/20060824100531/http://www.xmlrpc.com/discuss/msgReader$1208
+
+        The calls are specified by an XML-RPC array of XML-RPC structures.
+        Each structure must have exactly two arguments: 'methodName' and
+        'params'. Method name must be a string matching existing method.
+        Params must be an XML-RPC array of arguments for that method.
+
+        All methods will be executed in order, failure of any method does not
+        prevent other methods from executing.
+
+        The return value is an XML-RPC array of the same length as the lenght
+        of the subcalls array. Each element of the result array holds either an
+        XML-RPC Fault when the subcall has failed or a list with one element
+        that is the return value of the subcall.
+        """
+        if not isinstance(subcalls, list):
+            raise xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall expected a list of methods to call")
+        results = []
+        for subcall in subcalls:
+            result = self._multicall_dispatch_one(subcall)
+            if isinstance(result, xmlrpclib.Fault):
+                # Faults are returned directly
+                results.append(result)
+            else:
+                # We need to box each return value  in a list to distinguish
+                # them from faults which will be encoded as XML-RPC structs and
+                # might be indistinguishable from successul calls returning an
+                # XML-RCP struct.
+                results.append([result])
+        return results
+
     def getCapabilities(self):
         """
         Return XML-RPC Server capabilities.
