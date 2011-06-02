@@ -490,8 +490,7 @@ class SystemAPI(ExposedAPI):
         """
         Call multiple methods with one request.
 
-        See: http://web.archive.org/web/20060824100531/
-             http://www.xmlrpc.com/discuss/msgReader$1208
+        See: http://web.archive.org/web/20060824100531/http://www.xmlrpc.com/discuss/msgReader$1208
 
         The calls are specified by an XML-RPC array of XML-RPC structures.
         Each structure must have exactly two arguments: 'methodName' and
@@ -501,8 +500,10 @@ class SystemAPI(ExposedAPI):
         All methods will be executed in order, failure of any method does not
         prevent other methods from executing.
 
-        The return value is an XML-RPC array having either one XML-RPC Fault
-        or one value of arbitray kind for each subcall.
+        The return value is an XML-RPC array of the same length as the lenght
+        of the subcalls array. Each element of the result array holds either an
+        XML-RPC Fault when the subcall has failed or a list with one element
+        that is the return value of the subcall.
         """
         if not isinstance(subcalls, list):
             raise xmlrpclib.Fault(
@@ -511,7 +512,15 @@ class SystemAPI(ExposedAPI):
         results = []
         for subcall in subcalls:
             result = self._multicall_dispatch_one(subcall)
-            results.append(result)
+            if isinstance(result, xmlrpclib.Fault):
+                # Faults are returned directly
+                results.append(result)
+            else:
+                # We need to box each return value  in a list to distinguish
+                # them from faults which will be encoded as XML-RPC structs and
+                # might be indistinguishable from successul calls returning an
+                # XML-RCP struct.
+                results.append([result])
         return results
 
     def getCapabilities(self):
