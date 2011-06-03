@@ -387,8 +387,23 @@ class SystemAPITest(TestCase):
         retval = self.system_api.multicall([])
         self.assertEqual(retval, [])
 
+    def test_multicall_boxes_normal_return_values_in_lists(self):
+        # The return value of multicall is more complex than one might
+        # originally think: each return value is boxed in a one-element list
+        # to be different from unboxed faults.
+        class TestAPI(ExposedAPI):
+
+            def foo(self):
+                return 1
+        self.mapper.register(TestAPI)
+        calls = [
+            {"methodName": "TestAPI.foo", "params": []},
+        ]
+        observed = self.system_api.multicall(calls)
+        self.assertIsInstance(observed[0], list)
+        self.assertEqual(observed, [[1]])
+
     def test_multicall_calls_methods(self):
-        # Have some dummy API to talk to
         class TestAPI(ExposedAPI):
 
             def foo(self):
@@ -396,14 +411,11 @@ class SystemAPITest(TestCase):
 
             def bar(self, arg):
                 return arg
-        # Register this API with the mapper that we're talking to
         self.mapper.register(TestAPI)
-        # Construct multicall arguments for calling both functions
         calls = [
             {"methodName": "TestAPI.foo", "params": []},
             {"methodName": "TestAPI.bar", "params": ["bar-result"]},
         ]
-        # Expected results, methods get called
         expected = [
             ["foo-result"],
             ["bar-result"]
@@ -411,8 +423,23 @@ class SystemAPITest(TestCase):
         observerd = self.system_api.multicall(calls)
         self.assertEqual(observerd, expected)
 
+    def test_multicall_does_not_box_faults(self):
+        # See comment in test_multicall_boxes_normal_return_values_in_lists
+        # above. Each fault is returned directly and is not boxed in a list.
+        class TestAPI(ExposedAPI):
+
+            def boom(self):
+                raise xmlrpclib.Fault(1, "boom")
+        self.mapper.register(TestAPI)
+        calls = [
+            {"methodName": "TestAPI.boom", "params": []},
+        ]
+        observed = self.system_api.multicall(calls)
+        self.assertIsInstance(observed[0], xmlrpclib.Fault)
+
     def test_multicall_just_returns_faults(self):
-        # Have some dummy API to talk to
+        # If one method being called returns a fault, any subsequent method
+        # calls are still performed.
         class TestAPI(ExposedAPI):
 
             def boom(self):
@@ -420,16 +447,14 @@ class SystemAPITest(TestCase):
 
             def echo(self, arg):
                 return arg
-        # Register this API with the mapper that we're talking to
         self.mapper.register(TestAPI)
-        # Construct multicall arguments for calling both functions
         calls = [
             {"methodName": "TestAPI.echo", "params": ["before"]},
             {"methodName": "TestAPI.boom", "params": []},
             {"methodName": "TestAPI.echo", "params": ["after"]},
         ]
         observed = self.system_api.multicall(calls)
-        # Ping is called with 'before'
+        # echo is called with 'before'
         self.assertEqual(observed[0], ["before"])
         # Note that at this point the exception is returned as-is. It will be
         # converted to proper xml-rpc encoding by the dispatcher. Here we do
@@ -437,43 +462,8 @@ class SystemAPITest(TestCase):
         # properly.
         self.assertEqual(observed[1].faultCode, 1)
         self.assertEqual(observed[1].faultString, "boom")
-        # Ping is called with 'after'
+        # echo is called with 'after'
         self.assertEqual(observed[2], ["after"])
-
-    def test_multicall_boxes_normal_return_values_in_lists(self):
-        # Register this API with the mapper that we're talking to
-        class TestAPI(ExposedAPI):
-
-            def foo(self):
-                return 1
-        self.mapper.register(TestAPI)
-        # Construct multicall arguments for calling foo
-        calls = [
-            {"methodName": "TestAPI.foo", "params": []},
-        ]
-        observed = self.system_api.multicall(calls)
-        # The return value of multicall is more complex than I originally
-        # thought (I missed this detail when reading the spec). Each return
-        # value is boxed in a one-element list to be different from unboxed
-        # faults.
-        self.assertIsInstance(observed[0], list)
-        self.assertEqual(observed, [[1]])
-
-    def test_multicall_does_not_box_faults(self):
-        # Register this API with the mapper that we're talking to
-        class TestAPI(ExposedAPI):
-
-            def boom(self):
-                raise xmlrpclib.Fault(1, "boom")
-        self.mapper.register(TestAPI)
-        # Construct multicall arguments for calling boom
-        calls = [
-            {"methodName": "TestAPI.boom", "params": []},
-        ]
-        observed = self.system_api.multicall(calls)
-        # See my comments in test_multicall_boxes_normal_return_values_in_lists
-        # above. Each fault is returned directly and is not boxed in a list.
-        self.assertIsInstance(observed[0], xmlrpclib.Fault)
 
     def test_multicall_wants_a_list_of_sub_calls(self):
         # XXX: Use TestCaseWithInvariants in the future
