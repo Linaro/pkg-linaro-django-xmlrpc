@@ -476,41 +476,41 @@ class SystemAPITest(TestCase):
             else:
                 self.fail("Should have raised an exception")
 
-    def test_multicall_dispatch_one_wants_a_dict(self):
+    def test_multicall_subcall_wants_a_dict(self):
         # XXX: Use TestCaseWithInvariants in the future
         for bad_stuff in [None, [], True, False, -1, 10000, "foobar"]:
-            result = self.system_api._multicall_dispatch_one(bad_stuff)
+            [result] = self.system_api.multicall([bad_stuff])
             self.assertIsInstance(result, xmlrpclib.Fault)
             self.assertEqual(
                 result.faultCode,
                 FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
 
-    def test_multicall_dispatch_one_wants_methodName(self):
-        result = self.system_api._multicall_dispatch_one({})
+    def test_multicall_subcall_wants_methodName(self):
+        [result] = self.system_api.multicall([{}])
         self.assertIsInstance(result, xmlrpclib.Fault)
         self.assertEqual(
             result.faultCode,
             FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
 
-    def test_multicall_dispatch_one_wants_methodName_to_be_a_string(self):
-        result = self.system_api._multicall_dispatch_one(
-            {"methodName": False})
+    def test_multicall_subcall_wants_methodName_to_be_a_string(self):
+        [result] = self.system_api.multicall(
+            [{"methodName": False}])
         self.assertIsInstance(result, xmlrpclib.Fault)
         self.assertEqual(
             result.faultCode,
             FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
 
-    def test_multicall_dispatch_one_wants_params(self):
-        result = self.system_api._multicall_dispatch_one(
-            {"methodName": "system.listMethods"})
+    def test_multicall_subcall_wants_params(self):
+        [result] = self.system_api.multicall(
+            [{"methodName": "system.listMethods"}])
         self.assertIsInstance(result, xmlrpclib.Fault)
         self.assertEqual(
             result.faultCode,
             FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
 
-    def test_multicall_dispatch_one_wants_params_to_be_a_list(self):
-        result = self.system_api._multicall_dispatch_one(
-            {"methodName": "system.listMethods", "params": False})
+    def test_multicall_subcall_wants_params_to_be_a_list(self):
+        [result] = self.system_api.multicall(
+            [{"methodName": "system.listMethods", "params": False}])
         self.assertIsInstance(result, xmlrpclib.Fault)
         self.assertEqual(
             result.faultCode,
