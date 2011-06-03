@@ -516,6 +516,15 @@ class SystemAPITest(TestCase):
             result.faultCode,
             FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
 
+    def test_multicall_subcall_rejects_other_arguments(self):
+        [result] = self.system_api.multicall(
+            [{"methodName": "system.listMethods", "params": [], "other": 1}])
+        self.assertIsInstance(result, xmlrpclib.Fault)
+        print result.faultString
+        self.assertEqual(
+            result.faultCode,
+            FaultCodes.ServerError.INVALID_METHOD_PARAMETERS)
+
     def test_listMethods_exists(self):
         self.mapper.register(SystemAPI, 'system')
         self.assertIn("system.listMethods", self.system_api.listMethods())

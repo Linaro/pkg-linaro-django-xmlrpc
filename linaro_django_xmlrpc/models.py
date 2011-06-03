@@ -465,7 +465,7 @@ class SystemAPI(ExposedAPI):
             return xmlrpclib.Fault(
                 FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
                 "system.multicall methodName not specified")
-        methodName = subcall['methodName']
+        methodName = subcall.pop('methodName')
         if not isinstance(methodName, basestring):
             return xmlrpclib.Fault(
                 FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
@@ -474,11 +474,16 @@ class SystemAPI(ExposedAPI):
             return xmlrpclib.Fault(
                 FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
                 "system.multicall params not specified")
-        params = subcall['params']
+        params = subcall.pop('params')
         if not isinstance(params, list):
             return xmlrpclib.Fault(
                 FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
                 "system.multicall params must be an array")
+        if len(subcall) > 0:
+            return xmlrpclib.Fault(
+                FaultCodes.ServerError.INVALID_METHOD_PARAMETERS,
+                "system.multicall specified additional arguments %s" %
+                sorted(subcall.keys()))
         try:
             return self._context.dispatcher.dispatch(
                 methodName, params, self._context)
