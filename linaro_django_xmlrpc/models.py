@@ -420,8 +420,7 @@ class SystemAPI(ExposedAPI):
     XML-RPC System API
 
     This API may be mapped as "system" object to conform to XML-RPC
-    introspection specification. When doing so make sure to map an _instance_
-    and not the class as SystemAPI needs access to the mapper.
+    introspection specification.
     """
 
     def __init__(self, context):
