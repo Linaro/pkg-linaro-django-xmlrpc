@@ -79,7 +79,7 @@ def handler(request, mapper):
                 response['WWW-Authenticate'] = 'Basic realm="XML-RPC Authentication token"'
                 return response
         else:
-            user = None
+            user = request.user
         result = dispatcher.marshalled_dispatch(raw_data, user)
         response = HttpResponse(mimetype="application/xml")
         response.write(result)
