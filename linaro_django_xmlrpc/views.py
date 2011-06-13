@@ -76,10 +76,10 @@ def handler(request, mapper):
                 logging.exception("bug")
             if user is None:
                 response = HttpResponse("Invalid token", status=401)
-                response['WWW-Authenticate'] = 'Basic relam="XML-RPC Authentication token"'
+                response['WWW-Authenticate'] = 'Basic realm="XML-RPC Authentication token"'
                 return response
         else:
-            user = None
+            user = request.user
         result = dispatcher.marshalled_dispatch(raw_data, user)
         response = HttpResponse(mimetype="application/xml")
         response.write(result)
