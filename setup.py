@@ -26,20 +26,9 @@ except ImportError:
     raise
 
 
-try:
-    import versiontools
-except ImportError:
-    print "This package requires python-versiontools to be configured"
-    print "See: http://packages.python.org/versiontools/installation.html"
-    raise
-
-
-import linaro_django_xmlrpc
-
-
 setup(
     name='linaro-django-xmlrpc',
-    version=versiontools.format_version(linaro_django_xmlrpc.__version__),
+    version=":versiontools:linaro_django_xmlrpc:__version__",
     author="Zygmunt Krynicki",
     author_email="zygmunt.krynicki@linaro.org",
     packages=find_packages(),
@@ -60,7 +49,7 @@ setup(
         'django-testproject >= 0.1',
     ],
     setup_requires=[
-        'versiontools >= 1.1',
+        'versiontools >= 1.3.1',
     ],
     install_requires=[
         'django >= 1.2',
