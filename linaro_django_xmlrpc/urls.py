@@ -23,6 +23,7 @@ from django.conf.urls.defaults import patterns, url, handler500, handler404
 urlpatterns = patterns(
     'linaro_django_xmlrpc.views',
     url(r'^RPC2/$', "default_handler"),
+    url(r'^help/$', "default_help"),
     url(r'^tokens/$', "tokens"),
     url(r'^tokens/create/$', "create_token"),
     url(r'^tokens/(?P<object_id>\d+)/delete/$', "delete_token"),
