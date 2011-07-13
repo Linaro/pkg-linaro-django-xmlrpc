@@ -560,23 +560,20 @@ class HandlerTests(TestCase):
     def setUp(self):
         super(HandlerTests, self).setUp()
         self.url = reverse("linaro_django_xmlrpc.views.default_handler")
+        self.help_url = reverse("linaro_django_xmlrpc.views.default_help")
         from linaro_django_xmlrpc.globals import mapper
         self.mapper = mapper
 
-    def test_handler_get_returns_200(self):
+    def test_get_redirects_to_help(self):
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.help_url)
 
-    def test_get_request_shows_help(self):
-        response = self.client.get(self.url)
-        self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
-
-    def test_empty_post_request_shows_help(self):
+    def test_empty_post_redirects_to_help(self):
         response = self.client.post(self.url)
-        self.assertTemplateUsed(response, "linaro_django_xmlrpc/api.html")
+        self.assertRedirects(response, self.help_url)
 
     def test_help_page_lists_all_methods(self):
-        response = self.client.get(self.url)
+        response = self.client.get(self.help_url)
         for method_name in self.mapper.list_methods():
             self.assertIn(
                 method_name,

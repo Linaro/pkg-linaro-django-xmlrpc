@@ -28,7 +28,7 @@ from django.contrib.csrf.middleware import csrf_exempt
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 
 from linaro_django_xmlrpc.models import (
@@ -41,13 +41,17 @@ from linaro_django_xmlrpc.forms import AuthTokenForm
 
 
 @csrf_exempt
-def handler(request, mapper):
+def handler(request, mapper, help_view):
     """
     XML-RPC handler.
 
-    If post data is defined, it assumes it's XML-RPC and tries to
-    process as such. Empty POST request and GET requests assumes you're
-    viewing from a browser and tells you about the service.
+    If post data is defined, it assumes it's XML-RPC and tries to process as
+    such. Empty POST request and GET requests assumes you're viewing from a
+    browser and tells you about the service by redirecting you to a dedicated
+    help page. For backwards compatibility the help view defaults to the
+    'default_help' that shows what is registered in the global mapper. If you
+    want to show help specific to your mapper you must specify help_view. It
+    accepts whatever django.shortcuts.redirect() would. 
     """
     if len(request.POST):
         raw_data = request.raw_post_data
@@ -86,29 +90,22 @@ def handler(request, mapper):
         response['Content-length'] = str(len(response.content))
         return response
     else:
-        # Split this to different view, redirect.
-        # TODO: check xml-rpc spec to see what is recommended on GET requests.
-        context = CallContext(user=None, mapper=mapper, dispatcher=None)
-        system = SystemAPI(context)
-        methods = [{
-            'name': method,
-            'signature': system.methodSignature(method),
-            'help': system.methodHelp(method)}
-            for method in system.listMethods()]
-        return render_to_response('linaro_django_xmlrpc/api.html', {
-            'methods': methods,
-            'site_url': "http://{domain}".format(
-                domain=Site.objects.get_current().domain)},
-            RequestContext(request))
+        return redirect(help_view)
 
 
-@csrf_exempt
-def default_handler(request):
-    """
-    Same as handler but uses default mapper
-    """
-    from linaro_django_xmlrpc.globals import mapper
-    return handler(request, mapper)
+def help(request, mapper, template_name="linaro_django_xmlrpc/api.html"):
+    context = CallContext(user=None, mapper=mapper, dispatcher=None)
+    system = SystemAPI(context)
+    methods = [{
+        'name': method,
+        'signature': system.methodSignature(method),
+        'help': system.methodHelp(method)}
+        for method in system.listMethods()]
+    return render_to_response(template_name, {
+        'methods': methods,
+        'site_url': "http://{domain}".format(
+            domain=Site.objects.get_current().domain)},
+        RequestContext(request))
 
 
 @login_required
