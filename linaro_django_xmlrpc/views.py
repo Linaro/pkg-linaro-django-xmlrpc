@@ -41,7 +41,7 @@ from linaro_django_xmlrpc.forms import AuthTokenForm
 
 
 @csrf_exempt
-def handler(request, mapper, help_view="linaro_django_xmlrpc.views.default_help"):
+def handler(request, mapper, help_view):
     """
     XML-RPC handler.
 
@@ -93,15 +93,6 @@ def handler(request, mapper, help_view="linaro_django_xmlrpc.views.default_help"
         return redirect(help_view)
 
 
-@csrf_exempt
-def default_handler(request):
-    """
-    Same as handler but uses default mapper
-    """
-    from linaro_django_xmlrpc.globals import mapper
-    return handler(request, mapper, 'linaro_django_xmlrpc.views.default_help')
-
-
 def help(request, mapper):
     context = CallContext(user=None, mapper=mapper, dispatcher=None)
     system = SystemAPI(context)
@@ -115,11 +106,6 @@ def help(request, mapper):
         'site_url': "http://{domain}".format(
             domain=Site.objects.get_current().domain)},
         RequestContext(request))
-
-
-def default_help(request):
-    from linaro_django_xmlrpc.globals import mapper
-    return help(request, mapper)
 
 
 @login_required

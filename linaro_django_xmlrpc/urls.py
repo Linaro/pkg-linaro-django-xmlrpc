@@ -19,13 +19,28 @@
 
 from django.conf.urls.defaults import patterns, url, handler500, handler404
 
+from linaro_django_xmlrpc.globals import mapper
 
-urlpatterns = patterns(
+
+default_handler_urlpatterns = patterns(
     'linaro_django_xmlrpc.views',
-    url(r'^RPC2/$', "default_handler"),
-    url(r'^help/$', "default_help"),
+    url(r'^help/$', "help",
+        name='linaro_django_xmlrpc.views.default_help',
+        kwargs={
+            'mapper': mapper,
+        }),
+    url(r'^RPC2/$', "handler",
+        name='linaro_django_xmlrpc.views.default_handler', 
+        kwargs={
+            'mapper': mapper,
+            'help_view': 'linaro_django_xmlrpc.views.default_help'
+        }))
+
+token_urlpatterns = patterns(
+    'linaro_django_xmlrpc.views',
     url(r'^tokens/$', "tokens"),
     url(r'^tokens/create/$', "create_token"),
     url(r'^tokens/(?P<object_id>\d+)/delete/$', "delete_token"),
-    url(r'^tokens/(?P<object_id>\d+)/edit/$', "edit_token"),
-)
+    url(r'^tokens/(?P<object_id>\d+)/edit/$', "edit_token"))
+
+urlpatterns = default_handler_urlpatterns + token_urlpatterns
