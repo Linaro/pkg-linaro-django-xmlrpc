@@ -93,7 +93,7 @@ def handler(request, mapper, help_view):
         return redirect(help_view)
 
 
-def help(request, mapper):
+def help(request, mapper, template_name="linaro_django_xmlrpc/api.html"):
     context = CallContext(user=None, mapper=mapper, dispatcher=None)
     system = SystemAPI(context)
     methods = [{
@@ -101,7 +101,7 @@ def help(request, mapper):
         'signature': system.methodSignature(method),
         'help': system.methodHelp(method)}
         for method in system.listMethods()]
-    return render_to_response('linaro_django_xmlrpc/api.html', {
+    return render_to_response(template_name, {
         'methods': methods,
         'site_url': "http://{domain}".format(
             domain=Site.objects.get_current().domain)},
