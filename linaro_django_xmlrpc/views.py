@@ -94,7 +94,8 @@ def handler(request, mapper, help_view):
 
 
 def help(request, mapper, template_name="linaro_django_xmlrpc/api.html"):
-    context = CallContext(user=None, mapper=mapper, dispatcher=None)
+    context = CallContext(
+        user=None, mapper=mapper, dispatcher=None, request=request)
     system = SystemAPI(context)
     methods = [{
         'name': method,
