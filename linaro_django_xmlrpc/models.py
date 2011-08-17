@@ -182,7 +182,10 @@ class CallContext(object):
     @property
     def request(self):
         """
-        XXX
+        Return the HttpRequest object.
+
+        Generally, you won't need to look at this -- the dispatcher will have
+        interpreted the post data and so on.  But sometimes it's essential.
         """
         return self._request
 
