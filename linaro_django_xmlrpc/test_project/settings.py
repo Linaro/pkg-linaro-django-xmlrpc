@@ -18,11 +18,15 @@ locals().update(
             'django.contrib.contenttypes',
             'django.contrib.sessions',
             'django.contrib.messages',
+            'django_testproject',
             'linaro_django_xmlrpc',
             'example',
         ],
         MIDDLEWARE_CLASSES=[
             'django.contrib.messages.middleware.MessageMiddleware',
+        ],
+        TEMPLATE_LOADERS=[
+            'django.template.loaders.eggs.Loader'
         ],
         ROOT_URLCONF='linaro_django_xmlrpc.test_project.urls',
     )
