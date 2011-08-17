@@ -138,21 +138,22 @@ class CallContext(object):
     dispatcher together.
     """
 
-    def __init__(self, user, mapper, dispatcher):
+    def __init__(self, user, mapper, dispatcher, request=None):
         if user is not None and user.is_authenticated() and user.is_active:
             self._user = user
         else:
             self._user = None
         self._mapper = mapper
         self._dispatcher = dispatcher
+        self._request = request
 
     @property
     def user(self):
         """
         Return the user making the request.
 
-        Currently only requests authenticated with XML-RPC tokens
-        allow users to make authenticated requests.
+        The use of authentication tokens means that this can be different to
+        request.user.
         """
         return self._user
 
@@ -177,6 +178,16 @@ class CallContext(object):
         SystemAPI class.
         """
         return self._dispatcher
+
+    @property
+    def request(self):
+        """
+        Return the HttpRequest object.
+
+        Generally, you won't need to look at this -- the dispatcher will have
+        interpreted the post data and so on.  But sometimes it's essential.
+        """
+        return self._request
 
 
 class ExposedAPI(object):
@@ -358,7 +369,7 @@ class Dispatcher(object):
                 FaultCodes.ServerError.INTERNAL_XML_RPC_ERROR,
                 "Unable to decode request")
 
-    def marshalled_dispatch(self, data, user=None):
+    def marshalled_dispatch(self, data, user=None, request=None):
         """
         Dispatch marshalled request (encoded with XML-RPC envelope).
 
@@ -366,8 +377,8 @@ class Dispatcher(object):
 
         Returns the text of the response
         """
-        # Construct call context that binds user, mapper and dispatcher
-        context = CallContext(user, mapper=self.mapper, dispatcher=self)
+        context = CallContext(
+            user, mapper=self.mapper, dispatcher=self, request=request)
         try:
             method_name, params = self.decode_request(data)
             response = self.dispatch(method_name, params, context)

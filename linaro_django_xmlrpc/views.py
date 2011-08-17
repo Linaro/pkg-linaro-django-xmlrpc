@@ -84,7 +84,7 @@ def handler(request, mapper, help_view):
                 return response
         else:
             user = request.user
-        result = dispatcher.marshalled_dispatch(raw_data, user)
+        result = dispatcher.marshalled_dispatch(raw_data, user, request)
         response = HttpResponse(mimetype="application/xml")
         response.write(result)
         response['Content-length'] = str(len(response.content))
@@ -94,7 +94,8 @@ def handler(request, mapper, help_view):
 
 
 def help(request, mapper, template_name="linaro_django_xmlrpc/api.html"):
-    context = CallContext(user=None, mapper=mapper, dispatcher=None)
+    context = CallContext(
+        user=None, mapper=mapper, dispatcher=None, request=request)
     system = SystemAPI(context)
     methods = [{
         'name': method,
