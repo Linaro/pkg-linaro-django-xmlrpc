@@ -84,7 +84,7 @@ def handler(request, mapper, help_view):
                 return response
         else:
             user = request.user
-        result = dispatcher.marshalled_dispatch(raw_data, user)
+        result = dispatcher.marshalled_dispatch(raw_data, user, request)
         response = HttpResponse(mimetype="application/xml")
         response.write(result)
         response['Content-length'] = str(len(response.content))
