@@ -283,7 +283,7 @@ class Mapper(object):
             obj = cls(context)
         except:
             # TODO: Perhaps this should be an APPLICATION_ERROR?
-            logging.exception("unable to instantiate stuff")
+            logging.exception("unable to instantiate API class %r", cls)
         meth = getattr(obj, meth_name, None)
         if not inspect.ismethod(meth):
             return
@@ -346,6 +346,7 @@ class Dispatcher(object):
     def __init__(self, mapper, allow_none=True):
         self.mapper = mapper
         self.allow_none = allow_none
+        self.logger = logging.getLogger("linaro_django_xmlrcp.models.Dispatcher")
 
     def decode_request(self, data):
         """
@@ -399,6 +400,9 @@ class Dispatcher(object):
         try:
             impl = self.mapper.lookup(method_name, context)
             if impl is None:
+                self.logger.error(
+                    'Unable to dispatch unknown method %r', method_name,
+                    extra={'request': context.request})
                 raise xmlrpclib.Fault(
                         FaultCodes.ServerError.REQUESTED_METHOD_NOT_FOUND,
                         "No such method: %r" % method_name)
@@ -408,22 +412,27 @@ class Dispatcher(object):
             # Forward XML-RPC Faults to the client
             raise
         except:
-            # Treat all other exceptions as internal errors
-            self.handle_internal_error(method_name, params)
+            # Call a helper than can do more
+            if self.handle_internal_error(method_name, params) is None:
+                # If there is no better handler we should log the problem 
+                self.logger.error(
+                    "Internal error in the XML-RPC dispatcher while calling method %r with %r",
+                    method_name, params, exc_info=True,
+                    extra={'request': context.request})
+            # TODO: figure out a way to get the error id from Raven if that is around
             raise xmlrpclib.Fault(
                 FaultCodes.ServerError.INTERNAL_XML_RPC_ERROR,
-                "Internal Server Error (details hidden)")
+                "Internal Server Error (details hidden :)")
 
     def handle_internal_error(self, method_name, params):
         """
         Handle exceptions raised while dispatching registered methods.
 
-        Subclasses may implement this but cannot prevent the
-        xmlrpclib.Fault from being raised.
+        Subclasses may implement this but cannot prevent the xmlrpclib.Fault
+        from being raised. If something other than None is returned then a
+        logging message will be supressed.
         """
-        logging.exception(
-            "Unable to dispatch XML-RPC method %s(%s)",
-            method_name, params)
+        return None
 
 
 class SystemAPI(ExposedAPI):
