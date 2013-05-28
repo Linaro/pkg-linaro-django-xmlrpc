@@ -1,0 +1,5 @@
+linaro-django-xmlrpc (0.6-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Neil Williams <codehelp@debian.org>  Tue, 28 May 2013 15:55:30 +0100

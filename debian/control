@@ -1,0 +1,18 @@
+Source: linaro-django-xmlrpc
+Section: net
+Priority: optional
+Maintainer: Neil Williams <codehelp@debian.org>
+Build-Depends: debhelper (>= 8.0.0),
+ python | python-all | python-dev | python-all-dev
+X-Python-Version: 2.7
+Standards-Version: 3.9.4
+Homepage: http://www.linaro.org/engineering/validation
+#Vcs-Git: git://git.debian.org/collab-maint/linaro-django-xmlrpc.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/linaro-django-xmlrpc.git;a=summary
+
+Package: linaro-django-xmlrpc
+Architecture: all
+Depends: ${python:Depends}, ${misc:Depends}
+Description: Linaro XML-RPC for Django
+ Flexible XML-RPC application for Django projects
+ used by Linaro infrastructure team
