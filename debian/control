@@ -3,7 +3,8 @@ Section: net
 Priority: optional
 Maintainer: Neil Williams <codehelp@debian.org>
 Build-Depends: debhelper (>= 8.0.0),
- python | python-all | python-dev | python-all-dev
+ python | python-all | python-dev | python-all-dev,
+ python-setuptools
 X-Python-Version: 2.7
 Standards-Version: 3.9.4
 Homepage: http://www.linaro.org/engineering/validation

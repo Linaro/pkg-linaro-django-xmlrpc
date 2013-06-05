@@ -1,3 +1,9 @@
+linaro-django-xmlrpc (0.6-2) UNRELEASED; urgency=low
+
+  * Add extra build-dep and allow calculation of django dependency
+
+ -- Neil Williams <codehelp@debian.org>  Wed, 05 Jun 2013 19:31:50 +0100
+
 linaro-django-xmlrpc (0.6-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
