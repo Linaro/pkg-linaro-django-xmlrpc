@@ -1,8 +1,0 @@
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
-Name: Linaro Django XML-RPC
-Maintainer: Linaro Infrastructure Team <infrastructure@linaro.org>
-Source: http://launchpad.net/linaro-django-xmlrpc
-
-Files: * 
-Copyright: 2010, Linaro Limited 
-License: Affero GPL-3

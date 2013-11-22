@@ -1,5 +1,0 @@
-include COPYING
-include COPYING.AGPL-3 
-include setup-dev-env.sh
-recursive-include linaro_django_xmlrpc/fixtures *.json
-recursive-include linaro_django_xmlrpc/templates *.html
