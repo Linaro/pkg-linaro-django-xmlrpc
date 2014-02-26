@@ -1,3 +1,9 @@
+linaro-django-xmlrpc (2014.02-1) unstable; urgency=medium
+
+  * Migrate to django1.6 support
+
+ -- Neil Williams <codehelp@debian.org>  Wed, 26 Feb 2014 15:29:00 +0000
+
 linaro-django-xmlrpc (0.6-2) unstable; urgency=low
 
   * Add extra build-dep and allow calculation of django dependency
@@ -6,6 +12,6 @@ linaro-django-xmlrpc (0.6-2) unstable; urgency=low
 
 linaro-django-xmlrpc (0.6-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial release
 
  -- Neil Williams <codehelp@debian.org>  Tue, 28 May 2013 15:55:30 +0100

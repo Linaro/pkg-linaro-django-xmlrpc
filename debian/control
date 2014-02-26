@@ -9,10 +9,10 @@ Build-Depends: debhelper (>= 8.0.0),
  python | python-all | python-dev | python-all-dev,
  python-setuptools
 X-Python-Version: 2.7
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Homepage: http://www.linaro.org/engineering/validation
-#Vcs-Git: git://git.debian.org/collab-maint/linaro-django-xmlrpc.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/linaro-django-xmlrpc.git;a=summary
+Vcs-Git: git://git.linaro.org/people/neil.williams/linaro-django-xmlrpc.git
+Vcs-Browser: https://git.linaro.org/people/neil.williams/linaro-django-xmlrpc.git
 
 Package: linaro-django-xmlrpc
 Architecture: all
